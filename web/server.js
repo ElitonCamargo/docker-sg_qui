@@ -19,6 +19,15 @@ app.use((req, res, next) => {
     next();
 });
 
+// Rota para fornecer a configuração de ambiente para o cliente
+app.get('/env-config', (req, res) => {
+    const apiUrl = process.env.API_URL || null;
+    console.log('Injetando API_URL no cliente:', apiUrl);
+    // Retorna JSON adequado
+    res.type('application/json');
+    res.json({ API_URL: apiUrl });
+});
+
 // Servir arquivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -26,6 +35,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
 
 // Iniciar o servidor
 const PORT = process.env.PORT || 8080; // Use a porta definida no .env ou 8080 por padrão

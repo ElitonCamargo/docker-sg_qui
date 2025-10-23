@@ -1,5 +1,5 @@
 $(function () {
-
+    console.log(opt)
     // LOGAR
     $(document).on('click', '#logar', function () {
         let email = $('#email').val();

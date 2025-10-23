@@ -2,22 +2,10 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-const developmentConfig = {
-    host: "localhost",
-    port: 3306,
-    name: "sg_qui",
-    dialect: "mysql",
-    user: "root",
-    password: ""
-};
-
-const productionConfig = {
+export const db = {
     host: process.env.DB_HOST,
     port: parseInt(process.env.DB_PORT, 10),
-    name: process.env.BD_NAME,
-    dialect: process.env.BD_DIALECT,
-    user: process.env.BD_USER,
-    password: process.env.BD_PASS
+    name: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD
 };
-
-export const db = process.env.NODE_ENV === 'production' ? productionConfig : developmentConfig;

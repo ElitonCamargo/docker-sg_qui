@@ -40,3 +40,15 @@ docker-restart:
 # Verifica os logs dos containers
 docker-logs:
 	docker compose logs -f --tail=100
+
+# Makefile help
+help:
+	@echo "Comandos disponíveis:"
+	@echo "  backup-db       - Restaura o banco de dados a partir do backup.sql"
+	@echo "  reset-schema    - Apaga e recria apenas o schema do banco de dados"
+	@echo "  reset-db        - Apaga e recria o schema e popula com dados iniciais"
+	@echo "  seed            - Popula o banco de dados com dados iniciais"
+	@echo "  docker-up       - Inicia os containers do Docker"
+	@echo "  docker-down     - Para os containers do Docker"
+	@echo "  docker-restart  - Reinicia os containers do Docker"
+	@echo "  docker-logs     - Verifica os logs dos containers"
