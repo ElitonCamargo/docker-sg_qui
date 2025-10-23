@@ -1,0 +1,348 @@
+<h2>Tabela de Materia Prima</h2>
+<div class="table-responsive">
+  <table id="tabela-materiaPrima" class="table table-striped table-bordered">
+    <thead>
+      <tr>
+        <th></th>
+        <th></th>
+        <th></th>
+        <th></th>
+        <th></th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Os dados da tabela serão preenchidos dinamicamente pelo DataTable -->
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal -->
+<div class="modal modal-xl fade" id="detalhesModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Detalhes do materia_prima</h5>
+        <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formEditarMateriaPrima">
+        <div class="modal-body" id="detalhesNutriente">
+          <!-- Detalhes do materia_prima serão exibidos aqui -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btnEditar" class="btn btn-outline-secondary btn-sm">Editar</button>
+          <button type="submit" id="btnSalvar" class="btn btn-outline-secondary btn-sm d-none">Salvar
+            Alterações</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm btn-fecha-modal"
+            data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Cadastro de Garantias -->
+<div class="modal modal-xl fade" id="modalGarantias" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"></h5>
+        <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-fecha-modal" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="confirmacaoExclusaoModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmar Exclusão</h5>
+        <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Deseja realmente excluir o item <b id="nomeExclui"></b>?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="confirmarExclusao">Confirmar Exclusão</button>
+        <button type="button" class="btn btn-secondary btn-fecha-modal" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  $(function () {
+
+    let data;
+    let table;
+    //variavel de controle se algo foi alterado
+    let alterado = 0;
+
+    req_GET(opt.urlMateriaPrima).then((result) => {
+
+      data = result.data;
+
+      if (!result.success) {
+        // Tratamento de erro
+        let errorMessage;
+        // errorMessage = `${result.message || 'Erro desconhecido.'}`;
+        // Usa a função showErrorModal para mostrar o erro
+        // showErrorModal(errorMessage);
+        data = null;
+      }
+
+
+
+      // INICIA DATATABLE
+      table = $('#tabela-materiaPrima').DataTable({
+        data: data,
+        order: [[7, 'desc']],
+        columns: [
+          { title: 'Código', data: 'codigo' },
+          { title: 'Nome', data: 'nome' },
+          { title: 'Fórmula', data: 'formula' },
+          { title: 'CAS Number', data: 'cas_number' },
+          { title: 'Densidade', data: 'densidade' },
+          { title: 'Descrição', data: 'descricao' },
+          { // Coluna para os botões de ação
+            title: 'Ações',
+            data: null,
+            orderable: false,
+
+            render: function (data, type, row) {
+              return `
+                <button class="btn btn-outline-secondary btn-sm btn-detalhes-editar" data-id="${row.id}" data-bs-toggle="modal" data-bs-target="#detalhesModal" title="Ver/Editar"><i class="fa-solid fa-eye"></i>/<i class="fa-solid fa-pen-to-square"></i></button>
+                <button class="btn btn-outline-secondary btn-sm btn-garantias" data-id="${row.id}" data-nome="${row.nome}" data-bs-toggle="modal" data-bs-target="#modalGarantias" title="Garantias"><i class="fa-solid fa-award"></i></button>
+                <button class="btn btn-outline-secondary btn-sm btn-excluir" data-id="${row.id}" data-nome="${row.nome}" data-bs-toggle="modal" data-bs-target="#confirmacaoExclusaoModal" title="Excluir"><i class="fa-solid fa-ban"></i></button>
+                `;
+            }
+          },
+          { title: 'Update', data: 'updatedAt', visible: false },
+        ],
+        columnDefs: [
+          { targets: 6, autoWidth: true } // Ativa o ajuste automático da largura para a primeira coluna
+        ],
+        // Habilita a pesquisa global
+        searching: true
+      });
+      //FIM DATATABLE
+
+
+
+      // Adiciona campos de pesquisa em cada cabeçalho de coluna
+      $('#tabela-materiaPrima thead th').each(function () {
+        let title = $(this).text();
+        if (title !== "Ações") {
+          $(this).html(`<input type="text" class="form-control form-control-sm" placeholder="${title} "/>`);
+        }
+      });
+
+      // Adiciona um evento de pesquisa para cada campo de entrada de texto nas colunas
+      $('#tabela-materiaPrima thead th input').on('keyup', function () {
+        let columnIndex = $(this).closest('th').index(); // Obtém o índice da coluna
+        table.column(columnIndex).search(this.value).draw();
+      });
+
+
+      ///////////////EDITAR///////////////////////
+      // Abre modal de visualização e edição de materiaPrima
+      $('#tabela-materiaPrima').on('click', '.btn-detalhes-editar', function () {
+        const id = $(this).data('id');
+        const materia_prima = data.find(item => item.id === id);
+        exibirDetalhes(materia_prima);
+      });
+
+
+      // Função para exibir os detalhes em um modal
+      function exibirDetalhes(materia_prima) {
+        let html = `
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-md-2">
+                        <label for="codigo">Código:</label>
+                        <input type="text" class="form-control" id="codigo" name="codigo" value="${materia_prima.codigo}" readonly>
+                        </div>
+                        <div class="col-md-10">
+                        <label for="nome">Nome:</label>
+                        <input type="text" class="form-control" id="nome" name="nome" value="${materia_prima.nome}" readonly>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-4">
+                        <label for="formula">Fórmula:</label>
+                        <input type="text" class="form-control" id="formula" name="formula" value="${materia_prima.formula}" readonly>
+                        </div>
+                        <div class="col-md-4">
+                        <label for="cas_number">CAS Number:</label>
+                        <input type="text" class="form-control" id="cas_number" name="cas_number" value="${materia_prima.cas_number}" readonly>
+                        </div>
+                        <div class="col-md-4">
+                        <label for="densidade">Densidade:</label>
+                        <input type="text" class="form-control" id="densidade" name="densidade" value="${materia_prima.densidade}" readonly>
+                      </div>
+                    <div>
+                   <div class="row">   
+                      <div class="col-md-12">
+                        <label for="descricao">Descrição:</label>
+                        <textarea class="form-control" id="descricao" name="descricao" readonly>${materia_prima.descricao}</textarea>
+                      </div>
+                    </div>
+                    <input type="hidden" id="id" name="id" value="${materia_prima.id}">
+                </div>
+        `;
+
+        $('#detalhesNutriente').html(html);
+        $('#detalhesModal').modal('show');
+      }
+
+      // Adicionar evento de clique para o botão "Editar"
+      $('#detalhesModal').on('click', '#btnEditar', function () {
+        $('.form-control').prop('readonly', false);
+        $('#btnEditar').addClass('d-none');
+        $('#btnSalvar').removeClass('d-none');
+      });
+
+      // Adicionar evento de submit para o formulário de edição do materia_prima
+      $('#formEditarMateriaPrima').on('submit', function (event) {
+
+        event.preventDefault(); // Impedir o envio padrão do formulário
+        const jsonData = serializadoParaJSON($(this).serialize());
+
+        req_UPDATE(opt.urlMateriaPrima + "/" + jsonData.id, jsonData)
+          .then(result => {
+
+            if (!result.success) {
+              // Tratamento de erro
+              let errorMessage;
+              errorMessage = `${result.message || 'Erro desconhecido.'}`;
+              // Usa a função showErrorModal para mostrar o erro
+              showErrorModal(errorMessage);
+              return;
+            }
+
+            // Exibir resposta da API no console
+            $('#detalhesModal .modal-body').html(`${jsonData.nome} atualizado com sucesso!`);
+            $('#detalhesModal #btnSalvar').hide();
+            alterado = 1
+
+          }).catch(error => {
+            // Tratamento de erro de rede ou erro inesperado
+            showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+          });
+      });
+
+      //Limpa modal ao fechar
+      $('#detalhesModal').on('hidden.bs.modal', function () {
+        $('#detalhesNutriente').empty(); // Limpar o conteúdo do materia_prima com id 'detalhesNutriente'
+        $('#btnSalvar').addClass('d-none'); // Ocultar o botão "Salvar"
+        $('#btnEditar').removeClass('d-none'); // Exibir o botão "Editar"
+      });
+      ///////////////FIM EDITAR///////////////////////
+
+      ///////////////EXCLUIR///////////////////////
+      // Adicionar evento de clique para o botão "Excluir"
+
+      $('#tabela-materiaPrima').on('click', '.btn-excluir', function () {
+        const id = $(this).data('id');
+        const nome = $(this).data('nome');
+
+        // Faça algo com o ID, como confirmar a exclusão do materia_prima
+        excluirMateriaPrima(id, nome);
+      });
+
+      function excluirMateriaPrima(id, nome) {
+        // Exibe o modal de confirmação de exclusão com o nome do item
+        $('#nomeExclui').text(nome);
+        $('#confirmacaoExclusaoModal').modal('show');
+
+        // Evento ao clicar no botão "Confirmar Exclusão" no modal de confirmação
+        $('#confirmarExclusao').on('click', function () {
+
+          req_DELETE(opt.urlMateriaPrima + "/" + id).then((result) => {
+
+            if (!result.success) {
+          
+              // Tratamento de erro
+              let errorMessage;
+              errorMessage = `Não é possível excluir essa matéria prima pois ela está relacionada com algum nutriente ou algum projeto`;
+              // Usa a função showErrorModal para mostrar o erro
+              showErrorModal(errorMessage);
+              return;
+            }
+
+            // Fecha o modal de confirmação de exclusão
+            $('#confirmacaoExclusaoModal').modal('hide');
+            alterado = 1;
+
+          }).catch(error => {
+            console.error('Erro ao tentar fazer fetch:', error);
+            // Tratamento de erro de rede ou erro inesperado
+            showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+          });
+        });
+      }
+
+      ///////////////FIM EXCLUIR///////////////////////
+
+      ///////////////GARANTIAS///////////////////////////
+      $("#tabela-materiaPrima").on('click', '.btn-garantias', function () {
+        const id = $(this).data('id');
+        const materia_prima = data.find(item => item.id === id);
+        exibirGarantias(materia_prima);
+      })
+
+      function exibirGarantias(materia_prima) {
+        let data = JSON.stringify(materia_prima);
+
+        // Armazenar o objeto 'materia_prima' em um data-* atributo
+        $('#modalGarantias').data('materiaPrimaId', materia_prima.id);
+
+        $('#modalGarantias .modal-title').html(`GARANTIAS PARA: <b>${materia_prima.nome}<b>`);
+        $('#modalGarantias .modal-body').load('/page/materia_prima.modal.html');
+        $('#modalGarantias').modal('show');
+      }
+
+      ///////////////FIM GARANTIAS///////////////////////
+
+    }).catch(error => {
+      // Tratamento de erro de rede ou erro inesperado
+      showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+    });//FIM GETAPI
+
+    // FUNCOES AUXILIARES
+
+
+    $('.modal').on('hidden.bs.modal', function () {
+      if (alterado !== 0) {
+        req_GET(opt.urlMateriaPrima).then((result) => {
+
+          if (!result.success) {
+            // Tratamento de erro
+            let errorMessage;
+            errorMessage = `${result.message || 'Erro desconhecido.'}`;
+            // Usa a função showErrorModal para mostrar o erro
+            showErrorModal(errorMessage);
+            return;
+          }
+
+          data = result.data; // Atualiza os dados com a resposta da requisição
+          table.clear().rows.add(data).draw(); // Limpa a tabela, adiciona os novos dados e redesenha
+        }).catch(error => {
+          // Tratamento de erro de rede ou erro inesperado
+          showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+        });
+      }
+    })
+  })
+</script>

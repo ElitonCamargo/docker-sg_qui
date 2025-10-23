@@ -1,0 +1,88 @@
+/* login */
+.login {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login-container {
+    padding: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+/* fim login */
+
+/* botão tema */
+#theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    z-index: 10;
+}
+
+#theme-toggle i {
+    font-size: 24px;
+    /* ajuste o tamanho conforme necessário */
+}
+
+.nav .navbar-toggler{margin-left: 50px;}
+
+/* fim botão tema */
+
+table th input::placeholder {
+    font-weight: bolder
+}
+
+footer {
+    /* position: fixed; */
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.form-control:focus:read-only, .form-select:focus:read-only {
+    border-color: #fe8686;
+    outline: 0;
+    box-shadow: 0 0 0 .25rem rgba(253, 13, 13, 0.25);
+}
+.form-control:focus, .form-select:focus:read-only {
+    border-color: #8afe86;
+    outline: 0;
+    box-shadow: 0 0 0 .25rem rgba(13, 253, 33, 0.25);
+}
+
+/* Adiciona uma borda aos ícones dos cards */
+.cards-home {margin-top: 70px !important;}
+.cards-home .card i {
+    border: 2px solid #dee2e6;
+    padding: 10px;
+    border-radius: 50%;
+    background-color: #f8f9fa;
+}
+
+.ui-autocomplete {
+    position: absolute;
+    z-index: 10000;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: #212529;
+    color: #dee2e6;
+    border: solid thin #ddd;
+    border-radius: 8px;
+}
+
+.ui-menu-item{
+    cursor: pointer;
+    list-style: none;
+}
+.ui-menu-item:hover{
+    background-color: #0a0b0c;
+}

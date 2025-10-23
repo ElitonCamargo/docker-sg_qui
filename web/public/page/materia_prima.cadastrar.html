@@ -1,0 +1,100 @@
+<h2>Cadastrar Materia Prima</h2>
+<div id="msgResult">
+
+</div>
+<form class="container mt-5" id="formCadastrarMateriaPrima">
+
+  <div class="row">
+    <div class="col-md-2">
+      <label for="codigo" class="form-label">Código</label>
+      <input type="text" class="form-control" id="codigo" name="codigo" required>
+    </div>
+
+    <div class="col-md-10">
+      <label for="nome" class="form-label">Nome</label>
+      <input type="text" class="form-control" id="nome" name="nome" required>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4">
+      <label for="formula" class="form-label">Fórmula</label>
+      <input type="text" class="form-control" id="formula" name="formula" required>
+    </div>
+    <div class="col-md-4">
+      <label for="cas_number" class="form-label">CAS Number</label>
+      <input type="text" class="form-control" id="cas_number" name="cas_number" required>
+    </div>
+    <div class="col-md-4">
+      <label for="densidade" class="form-label">Densidade</label>
+      <input type="number" class="form-control" id="densidade" name="densidade" step="any" required>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <label for="descricao" class="form-label">Descrição</label>
+      <textarea class="form-control" id="descricao" name="descricao"></textarea>
+    </div>
+  </div>
+  <button class="btn btn-primary pull-left" type="submit" id="compostoCadastrar">Cadastrar</button>
+</form>
+
+<!-- Modal de Confirmação de Cadastro -->
+<div class="modal fade" id="confirmacaoCadastroModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirma Cadastro</h5>
+        <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-fecha-modal" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+  $(function () {
+
+
+    // Adicionar evento de submit para o formulário de edição do nutriente
+    $('#formCadastrarMateriaPrima').on('submit', function (event) {
+
+      event.preventDefault(); // Impedir o envio padrão do formulário
+      const jsonData = serializadoParaJSON($(this).serialize());
+
+      //trata virgula para numeros decimais
+      jsonData.densidade = jsonData.densidade.replace(/,/g, '.');
+
+
+      req_INSERT(opt.urlMateriaPrima, jsonData)
+        .then(result => {
+
+          if (!result.success) {
+
+            console.log(result)
+            // Tratamento de erro
+            let errorMessage;
+            errorMessage = `${result.message || 'Erro desconhecido.'}`;
+            // Usa a função showErrorModal para mostrar o erro
+            showErrorModal(errorMessage);
+            return;
+          }
+
+          $('#confirmacaoCadastroModal .modal-body').html(`<b>${result.data[0].nome}</b> cadastrado com sucesso!`);
+          $('#confirmacaoCadastroModal').modal('show');
+          $(this)[0].reset();
+
+        }).catch(error => {
+          // Tratamento de erro de rede ou erro inesperado
+          showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+        });
+    });
+
+  });
+
+</script>

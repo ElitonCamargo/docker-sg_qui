@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10pt;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: avoid;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+            align-content: center;
+        }
+
+        #header th,
+        #header td {
+            border: none;
+        }
+
+        th {
+            background-color: #f2f2f2;
+
+                   }
+
+        h2,
+        h3,
+        h4 {
+            margin-bottom: 0;
+        }
+
+        h2 {
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        h3 {
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 14px;
+
+        }
+
+        h4 {
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+
+
+        /* Estilo para a linha de total */
+        .total-row {
+            font-weight: bold;
+            background-color: #e6e6e6;
+        }
+
+        .total-row td {
+            border-top: 2px solid black;
+        }
+
+        .negrito {
+            font-weight: bold;
+        }
+
+        #responsaveis th {
+            border: none
+        }
+
+        #responsaveis td {
+            border: none
+        }
+        #descricao_producao th{text-align: center;}
+
+        [contenteditable="true"] {
+            background-color: yellow;
+        }
+
+        @media print {
+
+            th,
+            td {
+                padding: 2px;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            [contenteditable="true"] {
+                background-color: inherit;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="no-print">
+        <button id="back-button" onclick="goBack()">Voltar</button>
+        <button onclick="window.print()">Imprimir</button>
+    </div>
+    <table id="header">
+        <tr>
+            <td style="width: 105px; text-align: center;"><img id="print-logo" src=""></td>
+            <td style="text-align: center;">
+                <h2 class="titulo1">Acompanhamento de Projeto - Prova de Laboratório</h2>
+                <h3 class="titulo2">Desenvolvimento de Produto</h3>
+            </td>
+        </tr>
+    </table>
+
+    <h3>1 - Informações Gerais do Produto</h3>
+    <table>
+        <tr>
+            <th>Nome Comercial:</th>
+            <td colspan="3" id="nome_comercial"></td>
+        </tr>
+        <tr>
+            <th>Densidade a 20°C:</th>
+            <td id="densidade"></td>
+            <th>pH:</th>
+            <td id="ph"></td>
+        </tr>
+        <tr>
+            <th>Tipo de Fertilizante:</th>
+            <td id="tipo_fertilizante"></td>
+            <th>Modo de Aplicação:</th>
+            <td id="modo_aplicacao"></td>
+        </tr>
+        <tr>
+            <th>Garantia:</th>
+            <td colspan="3" id="garantia"></td>
+        </tr>
+        <tr>
+            <th>Descrição:</th>
+            <td colspan="3" id="descricao"></td>
+        </tr>
+    </table>
+
+    <h3 class="titulo2">2 - Dados do Projeto</h3>
+    <table>
+        <tr>
+            <th>Cliente:</th>
+            <td id="cliente" colspan="10"></td>
+        </tr>
+        <tr>
+            <th>Nº do Projeto:</th>
+            <td id="numero_projeto" colspan="2"></td>
+            <th>Natureza Física:</th>
+            <td colspan="5" id="natureza_fisica"></td>
+            <th>Status:</th>
+            <td id="status" colspan="2"></td>
+        </tr>
+
+        <tr>
+            <table>
+                <th style="width: 16.5%;">Data de Criação:</th>
+                <td id="data_solicitacao" style="width: 16.5%;"></td>
+                <th style="width: 16.5%;">Data de Início</th>
+                <td id="data_inicio" style="width: 16.5%;"></td>
+                <th style="width: 16.5%;">Data de Término</th>
+                <td id="data_termino" style="width: 16.5%;"></td>
+            </table>
+        </tr>
+    </table>
+
+
+
+    <h3 class="titulo2">3 - Descrição de Produção</h3>
+    <table id="quantidade">
+        <tr>
+            <th style="width: 175px;">Quantidade kg/l (ex: 1.4)</th>
+            <td id="quantidadeVendida" contenteditable="true">1</td>
+        </tr>
+    </table>
+    <table id="descricao_producao">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Matéria-Prima</th>
+                <th>Código</th>
+                <th>% (sistema)</th>
+                <th>Quantidade (g/ml)</th>
+                <th style="width: 50px;">Tempo de Agitação (min)</th>
+                <th>Lote</th>
+              
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Linhas serão preenchidas dinamicamente -->
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="3" style="text-align:right;">Total:</td>
+                <td style="text-align:right" id="total_percentual">0,0000%</td>
+                <td style="text-align:right" id="total_quantidade">0,0000</td>
+                <td id="total_quantidade">&nbsp;</td>
+           
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+
+
+    <h3 class="titulo2">4 - Procedimento</h3>
+    <table>
+        <tr>
+            <td contenteditable="true" id="print-procedimento"></td>
+        </tr>
+    </table>
+
+    <h3 class="titulo2">5 - Análises Físico-Químicas</h3>
+    <table>
+        <tr>
+            <td>
+                <!-- Select para escolher as análises -->
+                <div class="no-print">
+                    <label for="analisesSelect">Selecione a Análise:</label>
+                    <select id="analisesSelect">
+                        <option value="">-- Selecione --</option>
+                    </select>
+
+                    <button id="adicionarBtn">Adicionar Análise</button>
+                </div>
+                <table id="tabelaAnalises">
+                    <tr>
+                        <th>Análises</th>
+                        <th>Especificação</th>
+                        <th>Resultado</th>
+                    </tr>
+                </table>
+
+            </td>
+            <td>
+
+                <table id="responsaveis">
+                    <tr>
+                        <th>Produzido por: </th>
+                        <td contenteditable="true" id="print-produzido-por"></td>
+                    </tr>
+                    <tr>
+                        <th>Resultado final:</th>
+                        <td contenteditable="true" id="print-resultado-final"></td>
+                    </tr>
+                </table>
+
+            </td>
+        </tr>
+    </table>
+
+    <h3 class="titulo2">6 - Observações</h3>
+
+
+
+    <table>
+        <tr>
+            <td style="width: 50%;">
+                <table>
+                    <tr style="font-size: 10px;">
+                        <td>
+                            <input id="hm" type="checkbox"> <label for="hm">Matéria Prima Homologada</label>
+                        </td>
+                        <td>
+                            <input id="nr" type="checkbox"><label for="nr">Solicitar Novo Registro</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" contenteditable="true">
+                        </td>
+
+                    </tr>
+                    <tr>
+                        <td colspan="2" id="print-anexo" contenteditable="true"></td>
+                    </tr>
+                </table>
+
+            </td>
+            <td>
+                <table>
+                    <tr>
+                        <th>RESPONSÁVEL DA ÁREA: </th>
+                        <td contenteditable="true" id="print-responsavel-area"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <script src="/assets/vendor/jquery-3.7.1.min.js"></script>
+    <script src='/assets/js/config.js'></script>
+    <script src='/assets/js/recursos.js'></script>
+    <!-- Script para preencher os dados dinamicamente -->
+    <script>
+
+        // alimenta os dados do form
+        (async () => {
+            const procedimento = await getConfig('print-procedimento');
+            const produzidoPor = await getConfig('print-produzido-por');
+            const resultadoFinal = await getConfig('print-resultado-final');
+            const responsavelArea = await getConfig('print-responsavel-area');
+            const anexo = await getConfig('print-anexo');
+
+
+
+
+            $("#print-procedimento").html(procedimento.value);
+            $("#print-produzido-por").html(produzidoPor.value);
+            $("#print-resultado-final").html(resultadoFinal.value);
+            $("#print-responsavel-area").html(responsavelArea.value);
+            $("#print-anexo").html(anexo.value);
+
+
+            //alimenta o select de analises
+            const analises = await getConfig('print-analises');
+            const analises_array = analises.value.split(',').map(item => item.trim());
+
+            // Itera sobre o array e adiciona cada item como uma option no select
+            $.each(analises_array, (k, v) => {
+                $('#analisesSelect').append($('<option>', {
+                    value: v, // Define o valor da option
+                    text: v   // Define o texto da option
+                }));
+            });
+
+        })();
+
+
+        let param = getAllUrlParams()
+
+        req_GET(opt.urlProjeto + `/detalhado/${param.id}`).then((result) => {
+
+            if (result.success) {
+
+                let data = result.data[0];
+
+
+
+                // monta garantias visiveis
+                let garantias_visiveis = "";
+                data.nutrientes.forEach(nt => {
+                    if (nt.visivel == 1) {
+                        garantias_visiveis += `<span class="negrito">${nt.formula}</span> - ${nt.percentual.toFixed(4)}% `
+                    }
+                });
+
+                // Preenchendo os dados no HTML
+                document.title = `${data.codigo} - ${data.nome}`;
+                document.getElementById('nome_comercial').innerText = data.nome;
+                document.getElementById('densidade').innerText = data.densidade.toFixed(4) + " g/ml";
+                document.getElementById('ph').innerText = data.ph;
+                document.getElementById('tipo_fertilizante').innerText = data.tipo;
+                document.getElementById('modo_aplicacao').innerText = data.aplicacao.join(', ');
+                document.getElementById('garantia').innerHTML = garantias_visiveis;
+                document.getElementById('descricao').innerText = data.descricao;
+                document.getElementById('numero_projeto').innerText = data.codigo;
+                document.getElementById('status').innerText = data.status[0].status;
+                document.getElementById('cliente').innerText = data.cliente;
+                document.getElementById('data_solicitacao').innerText = formatarDataPtBr(data.createdAt);
+                document.getElementById('data_inicio').innerText = formatarDataPtBr(data.data_inicio);
+                document.getElementById('data_termino').innerText = formatarDataPtBr(data.data_termino);
+                document.getElementById('natureza_fisica').innerText = data.natureza_fisica;
+
+
+                // Preenchendo a tabela de descrição de produção
+                const tableBody = document.querySelector('#descricao_producao tbody');
+
+                let totais = criaLista(data.densidade, data.etapas, tableBody);
+
+                // Calculando totais
+                document.getElementById('total_percentual').innerText = `${totais.somaPercentual.toFixed(4)}%`;
+                document.getElementById('total_quantidade').innerText = totais.somaPeso;
+
+
+                $("#quantidade").on('blur', '#quantidadeVendida', function () {
+
+
+                    let totais = criaLista(data.densidade, data.etapas, tableBody);
+
+                    // Calculando totais
+                    document.getElementById('total_percentual').innerText = `${totais.somaPercentual.toFixed(4)}%`;
+                    document.getElementById('total_quantidade').innerText = totais.somaPeso;
+                });
+
+
+            }
+        });
+
+
+
+
+
+
+
+
+        const criaLista = (densidade, etapas, tableBody) => {
+            tableBody.innerHTML = "";
+            let i = 1;
+            let somaPercentual = null;
+            let somaPeso = null;
+
+            etapas.forEach(etapa => {
+
+                let row = document.createElement('tr');
+                row.innerHTML = `
+                                <td colspan=7 class="titulo3"><strong>${etapa.nome} - ${etapa.descricao}</strong></td>
+                                `;
+                tableBody.appendChild(row);
+
+                etapa.etapa_mp.forEach(mp => {
+
+                    let peso = calculaPeso(densidade, mp.percentual)
+
+                    row = document.createElement('tr');
+             
+                    row.innerHTML = `
+                                <td style="text-align:center">${i}</td>
+                                <td>${mp.materia_prima}</td>
+                                <td style="text-align:center">${mp.mp_codigo}</td>
+                                <td style="text-align:right">${mp.percentual.toFixed(4)}%</td>
+                                <td style="text-align:right">${peso}</td>
+                                <td style="text-align:center">${mp.tempo_agitacao}</td>
+                                <td>${mp.lote}</td>
+                                `;
+
+                    somaPercentual += mp.percentual;
+                    somaPeso += parseFloat(peso);
+                    tableBody.appendChild(row);
+                    i++
+                });
+
+            });
+
+            return { 'somaPercentual': somaPercentual, 'somaPeso': somaPeso.toFixed(4) }
+        }
+
+
+        const calculaPeso = (densidade, percentual) => {
+
+            let qtVendida = parseFloat($("#quantidadeVendida").text().trim() || '0');
+
+            let pesoGr = (parseFloat(densidade) * parseFloat(percentual)) / 100;
+
+            return ((qtVendida * pesoGr) * 1000).toFixed(4);
+        }
+
+        document.getElementById('adicionarBtn').addEventListener('click', function () {
+            const select = document.getElementById('analisesSelect');
+            const valorSelecionado = select.value;
+
+            if (valorSelecionado === '') {
+                alert('Por favor, selecione uma análise.');
+                return;
+            }
+
+            // Cria uma nova linha na tabela
+            const tabela = document.getElementById('tabelaAnalises');
+            const novaLinha = tabela.insertRow();
+            // Célula para Análise
+            const celulaAnalise = novaLinha.insertCell(0);
+            celulaAnalise.textContent = valorSelecionado;
+
+            // Célula para Especificação (conteúdo editável)
+            const celulaEspecificacao = novaLinha.insertCell(1);
+            celulaEspecificacao.setAttribute('contenteditable', 'true');
+            celulaEspecificacao.textContent = 'Especificação';
+
+            // Célula para Resultado (conteúdo editável)
+            const celulaResultado = novaLinha.insertCell(2);
+            celulaResultado.setAttribute('contenteditable', 'true');
+            celulaResultado.textContent = 'Resultado';
+            // Reseta o select após adicionar
+            select.value = '';
+        });
+
+        const quantidadeVendida = document.getElementById('quantidadeVendida');
+
+        quantidadeVendida.addEventListener('input', function () {
+            // Armazena a posição do cursor
+            const cursorPos = window.getSelection().getRangeAt(0).startOffset;
+
+            // Substitui vírgula por ponto no texto atual
+            let valor = this.textContent.replace(',', '.');
+
+            // Atualiza o conteúdo sem interferir na posição do cursor
+            this.textContent = valor;
+
+            // Restaura a posição do cursor
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.setStart(this.firstChild, cursorPos);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        });
+
+        quantidadeVendida.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+
+
+        function goBack() {
+            window.history.back();
+        }
+
+        async function loadImage() {
+            try {
+                // Supondo que getConfig seja uma função assíncrona que retorna uma Promise
+                const base64Image = await getConfig('print-logo');  // Espera o valor resolvido da Promise
+
+                if (base64Image) {
+                    $('#print-logo').attr('src', base64Image.value).show();  // Atribui o valor correto ao src
+                } else {
+                    alert('Imagem não encontrada no banco.');
+                }
+            } catch (error) {
+                console.error("Erro ao carregar a imagem:", error);
+            }
+        }
+        loadImage()
+    </script>
+
+    <div class="no-print" style="height: 300px;"></div>
+</body>
+
+</html>

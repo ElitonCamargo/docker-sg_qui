@@ -1,0 +1,87 @@
+{
+    "menu": [{
+            "title": "Elementos",
+            "url": "/elemento/listar",
+            "icon": "fa-flask",
+            "text": "Gerencie os elementos do sistema com facilidade.",
+            "buttonText": "Ver Elementos"
+        },
+        {
+            "title": "Nutrientes",
+            "dropdown": [{
+                    "title": "Cadastrar",
+                    "url": "/nutrientes/cadastrar"
+                },
+                {
+                    "title": "Listar",
+                    "url": "/nutrientes/listar"
+                }
+            ],
+            "icon": "fa-leaf",
+            "text": "Adicione e visualize nutrientes no sistema.",
+            "buttonText": "Ver Nutrientes"
+        },
+        {
+            "title": "Matéria Prima",
+            "dropdown": [{
+                    "title": "Cadastrar",
+                    "url": "/materia_prima/cadastrar"
+                },
+                {
+                    "title": "Listar",
+                    "url": "/materia_prima/listar"
+                }
+            ],
+            "icon": "fa-flask-vial",
+            "text": "Cadastre e gerencie a matéria prima utilizada.",
+            "buttonText": "Ver Matéria Prima"
+        },
+        {
+            "title": "Projetos",
+            "dropdown": [{
+                    "title": "Cadastrar",
+                    "url": "/projeto/cadastrar"
+                },
+                {
+                    "title": "Listar",
+                    "url": "/projetos/listar"
+                }
+            ],
+            "icon": "fa-gear",
+            "text": "Gerencie e visualize os projetos em andamento.",
+            "buttonText": "Ver Projetos"
+        },
+        {
+            "title": "Usuários",
+            "dropdown": [{
+                    "title": "Cadastrar",
+                    "url": "/usuario/cadastrar"
+                },
+                {
+                    "title": "Listar",
+                    "url": "/usuario/listar"
+                }
+            ],
+            "icon": "fa-users",
+            "text": "Gerencie os usuários do sistema.",
+            "buttonText": "Ver Usuários"
+        },
+        {
+            "title": "Configurações",
+            "dropdown": [{
+                "title": "Configurações Gerais do Sistema",
+                "url": "/configuracao"
+            }],
+            "icon": "fa-cogs",
+            "text": "Configurações gerais do Sistema.",
+            "buttonText": "Configurar"
+        },
+        {
+            "title": "Sair",
+            "url": "javascript:logoff()",
+            "icon": "fa-right-from-bracket",
+            "text": "Clique aqui para sair do sistema.",
+            "buttonText": "Logoff"
+        }
+    ]
+}

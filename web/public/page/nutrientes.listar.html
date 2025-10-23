@@ -1,0 +1,262 @@
+<h2>Tabela de Nutrientes Químicos</h2>
+<div class="table-responsive">
+  <table id="tabela-nutrientes" class="table table-striped table-bordered">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Fórmula</th>
+        <th>Ações</th>
+        <th style="display: none;">Update</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Os dados da tabela serão preenchidos dinamicamente pelo DataTable -->
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="detalhesModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Detalhes do nutriente</h5>
+        <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formEditarNutriente">
+        <div class="modal-body" id="detalhesMateriaPrima">
+          <!-- Detalhes do nutriente serão exibidos aqui -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btnEditar" class="btn btn-outline-secondary btn-sm">Editar</button>
+          <button type="submit" id="btnSalvar" class="btn btn-outline-secondary btn-sm d-none">Salvar
+            Alterações</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm btn-fecha-modal"
+            data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="confirmacaoExclusaoModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmar Exclusão</h5>
+        <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Deseja realmente excluir o item <b id="nomeExclui"></b>?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="confirmarExclusao">Confirmar Exclusão</button>
+        <button type="button" class="btn btn-secondary btn-fecha-modal" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  $(function () {
+
+    let data;
+    let table;
+    //variavel de controle se algo foi alterado
+    let alterado = 0;
+
+    req_GET(opt.urlNutriente).then((result) => {
+
+      data = result.data;
+
+      if (!result.success) {
+        // Tratamento de erro
+        let errorMessage;
+        errorMessage = `${result.message || 'Erro desconhecido.'}`;
+        // Usa a função showErrorModal para mostrar o erro
+        // showErrorModal(errorMessage);
+        data = null;
+        // return;
+      }
+
+      // INICIA DATATABLE
+      table = $('#tabela-nutrientes').DataTable({
+        data: data,
+        order: [[3, 'desc']],
+        columns: [
+
+          { title: 'Nome', data: 'nome' },
+          { title: 'Fórmula', data: 'formula' },
+          { // Coluna para os botões de ação
+            title: 'Ações',
+            data: null,
+            orderable: false,
+
+            render: function (data, type, row) {
+              return `
+                          <button class="btn btn-outline-secondary btn-sm btn-detalhes-editar" data-id="${row.id}" data-bs-toggle="modal" data-bs-target="#detalhesModal" title="Ver/Editar"><i class="fa-solid fa-eye"></i>/<i class="fa-solid fa-pen-to-square"></i></button>
+                          <button class="btn btn-outline-secondary btn-sm btn-excluir" data-id="${row.id}" data-nome="${row.nome}" title="Excluir"><i class="fa-solid fa-ban"></i></button>
+                      `;
+            }
+          }, { title: 'Update', data: 'updatedAt', visible: false }
+        ],
+        columnDefs: [
+          { targets: 3, autoWidth: true } // Ativa o ajuste automático da largura para a primeira coluna
+        ],
+        // Habilita a pesquisa global
+        searching: true
+      });
+      //FIM DATATABLE
+
+
+
+      // Adiciona campos de pesquisa em cada cabeçalho de coluna
+      $('#tabela-nutrientes thead th').each(function () {
+        let title = $(this).text();
+        if (title !== "Update" && title !== "Ações") {
+          $(this).html(`<input type="text" class="form-control form-control-sm" placeholder="${title} "/>`);
+        }
+      });
+
+      // Adiciona um evento de pesquisa para cada campo de entrada de texto nas colunas
+      $('#tabela-nutrientes thead th input').on('keyup', function () {
+        let columnIndex = $(this).closest('th').index(); // Obtém o índice da coluna
+        table.column(columnIndex).search(this.value).draw();
+      });
+
+      //Abre modal de visualização e edição de nutrientes
+      $('#tabela-nutrientes').on('click', '.btn-detalhes-editar', function () {
+        const id = $(this).data('id');
+        const nutriente = data.find(item => item.id === id);
+        exibirDetalhes(nutriente);
+      });
+
+      // Função para exibir os detalhes em um modal
+      function exibirDetalhes(nutriente) {
+        let html = `
+                <div class="form-group">
+                    <div class="form-group">
+                      <label for="nome">Nome:</label>
+                      <input type="text" class="form-control" id="nome" name="nome" value="${nutriente.nome}" readonly>
+                    </div>
+                    <div class="form-group">
+                      <label for="formula">Fórmula:</label>
+                      <input type="text" class="form-control" id="formula" name="formula" value="${nutriente.formula}" readonly>
+                    </div>
+                      <div class="form-check" style="align-content:end">
+                        <input class="form-check-input" type="checkbox" id="visivelCheckbox" ${(nutriente.visivel == 1) ? "checked" : ""} disabled>
+                        <label class="form-check-label" for="visivelCheckbox">
+                          Visível na impressão
+                        </label>
+                        <input type="hidden" name="visivel" id="visivel" value="${(nutriente.visivel == 1) ? "1" : "0"}">
+                      </div>
+                    <input type="hidden" id="id" name="id" value="${nutriente.id}"
+                </div>
+        `;
+
+        $('#detalhesMateriaPrima').html(html);
+        $('#detalhesModal').modal('show');
+      }
+
+      // Adicionar evento de clique para o botão "Editar"
+      $('#detalhesModal').on('click', '#btnEditar', function () {
+        $('.form-control').prop('readonly', false);
+        $('#visivelCheckbox').prop('disabled', false);
+        $('#btnEditar').addClass('d-none');
+        $('#btnSalvar').removeClass('d-none');
+      });
+
+      // Adicionar evento de submit para o formulário de edição do nutriente
+      $('#formEditarNutriente').on('submit', function (event) {
+
+        event.preventDefault(); // Impedir o envio padrão do formulário
+        const jsonData = serializadoParaJSON($(this).serialize());
+
+        req_UPDATE(opt.urlNutriente + "/" + jsonData.id, jsonData)
+          .then(result => {
+
+            if (!result.success) {
+              // Tratamento de erro
+              let errorMessage;
+              errorMessage = `${result.message || 'Erro desconhecido.'}`;
+              // Usa a função showErrorModal para mostrar o erro
+              showErrorModal(errorMessage);
+              return;
+            }
+
+            // Exibir resposta da API no console
+            $('#detalhesModal .modal-body').html(`${jsonData.nome} atualizado com sucesso!`);
+            $('#detalhesModal #btnSalvar').hide();
+            alterado = 1
+          }).catch(error => {
+            // Tratamento de erro de rede ou erro inesperado
+            showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+          });
+      });
+
+      //Limpa modal ao fechar
+      $('#detalhesModal').on('hidden.bs.modal', function () {
+        $('#detalhesMateriaPrima').empty(); // Limpar o conteúdo do nutriente com id 'detalhesMateriaPrima'
+        $('#btnSalvar').addClass('d-none'); // Ocultar o botão "Salvar"
+        $('#btnEditar').removeClass('d-none'); // Exibir o botão "Editar"
+      });
+
+
+      // Adicionar evento de clique para o botão "Excluir"
+      $('#tabela-nutrientes').on('click', '.btn-excluir', function () {
+        const id = $(this).data('id');
+        const nome = $(this).data('nome');
+        // Faça algo com o ID, como confirmar a exclusão do nutriente
+        excluiNutriente(id, nome);
+      });
+
+    }).catch(error => {
+      // Tratamento de erro de rede ou erro inesperado
+      showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+    });//FIM GETAPI
+
+    // FUNCOES AUXILIARES
+    function excluiNutriente(id, nome) {
+      // Exibe o modal de confirmação de exclusão com o nome do item
+      $('#nomeExclui').text(nome);
+      $('#confirmacaoExclusaoModal').modal('show');
+
+      // Evento ao clicar no botão "Confirmar Exclusão" no modal de confirmação
+      $('#confirmarExclusao').on('click', function () {
+        let urlExclusao = opt.urlNutriente + "/" + id;
+        req_DELETE(urlExclusao).then((result) => {
+          if (!result.success) {
+            // Tratamento de erro
+            let errorMessage;
+            errorMessage = `${result.message || 'Erro desconhecido.'}`;
+            // Usa a função showErrorModal para mostrar o erro
+            showErrorModal(errorMessage);
+            return;
+          }
+
+          // Fecha o modal de confirmação de exclusão
+          $('#confirmacaoExclusaoModal').modal('hide');
+          alterado = 1;
+
+        }).catch(error => {
+          // Tratamento de erro de rede ou erro inesperado
+          showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+        });
+      });
+    }
+
+    $('.modal').on('hidden.bs.modal', function (e) {
+      if (alterado !== 0) {
+        window.location.reload(true);
+      }
+    })
+
+    // Script para garantir o valor correto no envio
+    $('#formEditarNutriente').on('change', '#visivelCheckbox', function () {
+      $("#visivel").val(this.checked ? '1' : '0');
+    });
+
+  })
+</script>

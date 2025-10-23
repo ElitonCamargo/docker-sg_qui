@@ -1,0 +1,67 @@
+services:
+  api:
+    image: node:lts
+    container_name: sgqui_api
+    working_dir: /usr/src/app
+    volumes:
+      - ./api:/usr/src/app
+    ports:
+      - "3000:3000"
+    environment:
+      # Configurações do banco de dados MySQL
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=sgqui_user
+      - DB_NAME=sgqui_db
+      - DB_PASSWORD=sgqui_password
+
+      # Configurações Redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - db
+      - redis
+    command: sh -c "npm install && npm run dev"
+
+  web:
+    image: node:lts
+    container_name: sgqui_web
+    working_dir: /usr/src/app
+    volumes:
+      - ./web:/usr/src/app
+    tty: true
+    ports:
+      - "8080:8080"
+    command: sh -c "npm install && npm run web"
+    environment:
+      - API_URL=http://api:3000
+    depends_on:
+      - api
+
+  db:
+    image: mysql:8.0
+    container_name: sgqui_mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=sgqui_db
+      - MYSQL_USER=sgqui_user
+      - MYSQL_PASSWORD=sgqui_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  redis:
+    image: redis:alpine
+    container_name: sgqui_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+
+volumes:
+  db_data:
+    name: sgqui_db_data
+  redis_data:
+    name: sgqui_redis_data

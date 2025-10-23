@@ -1,0 +1,91 @@
+<h2>Cadastrar Usuário</h2>
+<div id="msgResult">
+
+</div>
+<form class="container mt-5" id="formCadastrarUsuario">
+  <div class="row">
+    <div class="col-md-4">
+      <label for="nome" class="form-label">Nome</label>
+      <input type="text" class="form-control" id="nome" name="nome" required>
+    </div>
+
+    <div class="col-md-4">
+      <label for="login" class="form-label">Login</label>
+      <input type="email" class="form-control" id="login" name="email" required>
+    </div>
+
+    <div class="col-md-4">
+      <label for="senha" class="form-label">Senha</label>
+      <div class="input-group">
+        <input type="password" class="form-control" id="senha" name="senha" required>
+        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+          <i id="icon" class="fa fa-eye"></i>
+        </button>
+      </div>
+    </div>
+
+  </div>
+  <button class="btn btn-primary" type="submit" id="usuarioCadastrar">Cadastrar</button>
+</form>
+
+<!-- Modal de Confirmação de Cadastro -->
+<div class="modal fade" id="confirmacaoCadastroModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirma Cadastro</h5>
+        <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-fecha-modal" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+  $(function () {
+
+
+    // Adicionar evento de submit para o formulário de edição do nutriente
+    $('#formCadastrarUsuario').on('submit', function (event) {
+
+      event.preventDefault(); // Impedir o envio padrão do formulário
+      const jsonData = serializadoParaJSON($(this).serialize());
+
+      req_INSERT(opt.usuario, jsonData).then(result => {
+
+        if (!result.success) {
+          // Tratamento de erro
+          let errorMessage;
+          errorMessage = `${result.message || 'Erro desconhecido.'}`;
+          // Usa a função showErrorModal para mostrar o erro
+          showErrorModal(errorMessage);
+          return;
+        }
+        $('#confirmacaoCadastroModal .modal-body').html(`<b>${result.data[0].nome}</b> cadastrado com sucesso!`);
+        $('#confirmacaoCadastroModal').modal('show');
+        $(this)[0].reset();
+      }).catch(error => {
+        // Tratamento de erro de rede ou erro inesperado
+        showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+      });
+    });
+
+
+    $('#togglePassword').on('click', function () {
+      let passwordField = $('#senha');
+      let icon = $('#icon');
+
+      // Alternar o tipo do campo de senha
+      passwordField.attr('type', passwordField.attr('type') === 'password' ? 'text' : 'password');
+
+      // Alternar as classes dos ícones
+      icon.toggleClass('fa-eye fa-eye-slash');
+    });
+    
+  });
+
+</script>

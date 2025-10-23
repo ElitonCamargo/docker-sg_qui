@@ -1,0 +1,190 @@
+
+/* Estilos comuns a ambos os temas */
+body {
+    color: #333333;
+}
+
+h2 {
+    color: #444444;
+}
+
+.form-control {
+    background-color: #ffffff;
+    color: #333333;
+    border: 1px solid #cccccc;
+}
+
+.form-control::placeholder {
+    color: #888888;
+}
+
+.btn-primary {
+    border-color: #007bff;
+}
+
+a {
+    color: #007bff;
+}
+
+/* Tema claro */
+body.tema-claro {
+    background-color: #f2f2f2;
+}
+
+.login-container.tema-claro {
+    background-color: #ffffff;
+    border: 1px solid #cccccc;
+}
+
+.btn-primary.tema-claro {
+    background-color: #007bff;
+}
+
+.btn-primary.tema-claro:hover {
+    background-color: #0056b3;
+}
+
+a.tema-claro {
+    color: #007bff;
+}
+
+a.tema-claro:hover {
+    color: #0056b3;
+}
+
+/* Tema escuro */
+body.tema-escuro {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+.login-container.tema-escuro {
+    background-color: #111111;
+    border: 1px solid #333333;
+}
+
+.form-control.tema-escuro {
+    background-color: #111111;
+    color: #ffffff;
+    border: 1px solid #555555;
+}
+
+.form-control.tema-escuro::placeholder {
+    color: #888888;
+}
+
+.btn-primary.tema-escuro {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.btn-primary.tema-escuro:hover {
+    background-color: #003366;
+    border-color: #003366;
+}
+
+a.tema-escuro {
+    color: #0056b3;
+}
+
+a.tema-escuro:hover {
+    color: #003366;
+}
+
+/* altera azuis para cinza */
+/* Estilos comuns a ambos os temas */
+body {
+    color: #333333;
+}
+
+h2 {
+    color: #444444;
+}
+
+.form-control {
+    background-color: #ffffff;
+    color: #333333;
+    border: 1px solid #cccccc;
+}
+
+.form-control::placeholder {
+    color: #888888;
+}
+
+.btn-primary {
+    background-color: #6c757d; /* cinza */
+    border-color: #6c757d; /* cinza */
+}
+
+a {
+    color: #6c757d; /* cinza */
+}
+
+/* Tema claro */
+body.tema-claro {
+    background-color: #f2f2f2;
+}
+
+.login-container.tema-claro {
+    background-color: #ffffff;
+    border: 1px solid #cccccc;
+}
+
+.btn-primary.tema-claro {
+    background-color: #6c757d; /* cinza */
+    border-color: #6c757d; /* cinza */
+}
+
+.btn-primary.tema-claro:hover {
+    background-color: #495057; /* cinza mais escuro */
+    border-color: #495057; /* cinza mais escuro */
+}
+
+a.tema-claro {
+    color: #6c757d; /* cinza */
+}
+
+a.tema-claro:hover {
+    color: #495057; /* cinza mais escuro */
+}
+
+/* Tema escuro */
+body.tema-escuro {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+.login-container.tema-escuro {
+    background-color: #111111;
+    border: 1px solid #333333;
+}
+
+.form-control.tema-escuro {
+    background-color: #111111;
+    color: #ffffff;
+    border: 1px solid #555555;
+}
+
+.form-control.tema-escuro::placeholder {
+    color: #888888;
+}
+
+.btn-primary.tema-escuro {
+    background-color: #6c757d; /* cinza */
+    border-color: #6c757d; /* cinza */
+}
+
+.btn-primary.tema-escuro:hover {
+    background-color: #495057; /* cinza mais escuro */
+    border-color: #495057; /* cinza mais escuro */
+}
+
+a.tema-escuro {
+    color: #6c757d; /* cinza */
+}
+
+a.tema-escuro:hover {
+    color: #495057; /* cinza mais escuro */
+}
+
+/* fim altera azuis para cinza */

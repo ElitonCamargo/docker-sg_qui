@@ -1,0 +1,966 @@
+<style>
+    .fa-arrows-up-down-left-right {
+        cursor: move;
+    }
+
+    .toggle-icon {
+        font-size: 15px;
+    }
+
+    /* Estilizar o widget do auto-complete */
+
+    ul.timeline {
+        list-style-type: none;
+        position: relative;
+    }
+
+    ul.timeline:before {
+        content: ' ';
+        background: #d4d9df;
+        display: inline-block;
+        position: absolute;
+        left: 29px;
+        width: 2px;
+        height: 100%;
+        z-index: 400;
+    }
+
+    ul.timeline>li {
+        padding-left: 20px;
+        display: flex;
+        height: 30px;
+    }
+
+    ul.timeline>li>p {
+        padding-inline-end: 20px;
+        margin-top: -3px;
+    }
+
+    ul.timeline>li:before {
+        content: ' ';
+        background: white;
+        display: inline-block;
+        position: absolute;
+        border-radius: 50%;
+        border: 3px solid #22c0e8;
+        left: 20px;
+        width: 20px;
+        height: 20px;
+        z-index: 400;
+    }
+
+    tbody#addComposicaoProjeto>tr>td {
+        padding-top: 4;
+        padding-bottom: 0;
+    }
+
+    table {
+        pointer-events: auto;
+        user-select: text;
+        /* Permite a seleção de texto */
+    }
+
+    .ui-menu .ui-menu-item-wrapper {
+        color: #FFF
+    }
+
+    .etapa-list p {
+        margin-top: 50px !important;
+    }
+    .nutrientes-por-etapa input{width: 75%;}
+
+</style>
+
+<div class="row">
+    <div class="col-10">
+        <h2 id="tituloProjeto"></h2>
+    </div>
+    <div class="col-2">
+        <a href="" class="btn btn-outline-secondary btn-imprimir float-end" title="Imprimir"><i
+                class="fa-solid fa-print"></i> Imprimir</a>
+    </div>
+</div>
+<hr>
+<!-- ********************************** Detalhes ********************************** -->
+<ul class="list-group">
+    <li class="list-group-item" style="border: none; padding: 0;">
+        <h4 type="button" class="list-group-item" data-bs-toggle="collapse" data-bs-target="#projetoDetalhes"
+            data-bs-toggle="collapse" aria-expanded="false">
+            Detalhes do Projeto
+            <i class="fa fa-chevron-down ms-2 toggle-icon" style="float:right"></i>
+        </h4>
+        <div id="projetoDetalhes" class="row collapse">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Detalhes do Projeto</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><strong>Código:</strong> <span
+                                    id="detalhesProjeto_codigo"></span>
+                            </li>
+                            <li class="list-group-item"><strong>Nome do Projeto:</strong> <span
+                                    id="detalhesProjeto_nome"></span>
+                            </li>
+                            <li class="list-group-item"><strong>Cliente:</strong> <span
+                                    id="detalhesProjeto_cliente"></span>
+                            </li>
+                            <li class="list-group-item"><strong>Data de Criação:</strong> <span
+                                    id="detalhesProjeto_data_criacao"></span></li>
+                            <li class="list-group-item"><strong>Data de Início:</strong> <span
+                                    id="detalhesProjeto_data_inicio"></span></li>
+                            <li class="list-group-item"><strong>Data de Término:</strong> <span
+                                    id="detalhesProjeto_data_termino"></span></li>
+                            <li class="list-group-item"><strong>Status:</strong> <span
+                                    id="detalhesProjeto_status"></span></li>
+                            <li class="list-group-item"><strong>Aplicação:</strong> <span
+                                    id="detalhesProjeto_aplicacao"></span>
+                            </li>
+                            <li class="list-group-item"><strong>Tipo:</strong> <span id="detalhesProjeto_tipo"></span>
+                            </li>
+                            <li class="list-group-item"><strong>Natureza física:</strong> <span
+                                    id="detalhesProjeto_natureza_fisica"></span></li>
+                            <li class="list-group-item"><strong>PH:</strong> <span id="detalhesProjeto_ph"></span>
+                            </li>
+                            <li class="list-group-item"><strong>Densidade:</strong> <span
+                                    id="detalhesProjeto_densidade"></span></li>
+                            <li class="list-group-item"><strong>Descrição:</strong> <span
+                                    id="detalhesProjeto_descricao"></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card" id="tabelaNutrientes">
+                    <div class="card-body">
+                        <h5 class="card-title">Tabela de nutrientes</h5>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nutriente</th>
+                                    <th>Fórmula</th>
+                                    <th>Percentual</th>
+                                    <th>Origem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody_nutricional"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </li>
+</ul>
+
+<hr>
+<h4>Composição total</h4>
+<div class="progress" id="percentual_total"
+    style="text-shadow: 1px 1px 2px #000000d0; font-weight: bold; height: 23px; font-size: 16px;">
+    <!-- Inclusão do percentual concluido aqui -->
+</div>
+<hr>
+<button id="cadastraEtapa_" class="btn btn-outline-secondary" data-bs-toggle="modal" onclick="initModalEtapas()"
+    data-bs-target="#modalEtapas">Cadastrar
+    Etapa</button>
+<hr>
+
+<ul id="etapa-list" class="etapa-list list-group"></ul>
+
+
+<!-- Modal de Cadastro de Etapas -->
+<div class="modal modal-xl fade" id="modalEtapas" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cadastrar Etapa</h5>
+                <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <form class="container" id="formCadastrarEtapaProjeto">
+
+                    <div class="row">
+                        <div class="col">
+                            <label for="nome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <label for="descricao" class="form-label">Descrição</label>
+                            <textarea type="text" class="form-control" id="descricao" name="descricao"
+                                required></textarea>
+                        </div>
+                    </div>
+                    <br>
+                    <button class="btn btn-primary pull-left" type="submit" id="etapaCadastrar">Cadastrar</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-fecha-modal" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Cadastro de Matéria prima -->
+<div class="modal modal-xl fade" id="modalMpNutriente" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="titulo_Etapa"></h5>
+                <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Formulário -->
+                <form id="comporProjeto">
+                    <div class="row">
+                        <div class="col-4 mb-3">
+                            <input type="text" class="form-control" id="modal_percentual" placeholder="Percentual">
+                        </div>
+                        <div class="col-8 mb-3">
+                            <input type="text" class="form-control ui-autocomplete-input" id="modal_nutriente"
+                                placeholder="Preencha a porcentagem primeiro" autocomplete="off" disabled>
+                        </div>
+                    </div>
+                </form>
+                <!-- Tabela -->
+                <table class="table mt-3">
+                    <thead>
+                        <tr>
+                            <th>Matéria Prima</th>
+                            <th>Percentual</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="addComposicaoProjeto">
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-fecha-modal" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    //** Função resposável por esperar a DOM ser carregada **************************************************************************
+
+    //** Ordenação das listas pai (etapas) **************************************************************************************
+    $("#etapa-list").sortable({
+        handle: ".moverEtapa", // Só permite arrastar ao clicar no ícone de mover
+        opacity: 0.8,
+        cursor: 'grabbing',
+        update: function () {
+            let etapa_ordem = [];
+            $('#etapa-list > li').each(function (index) {
+                let etapa = {
+                    "id": $(this).data('id'),
+                    "ordem": index + 1
+                };
+                etapa_ordem.push(etapa);
+            });
+            // ************************************************** Chamando a função para executar a ação na API **********************************
+
+            console.log("ordem", etapa_ordem)
+
+            req_UPDATE(opt.urlEtapa + "/projeto/ordenar", etapa_ordem).then(result => {
+
+                if (!result.success) {
+                    // Tratamento de erro
+                    let errorMessage;
+                    errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                    // Usa a função showErrorModal para mostrar o erro
+                    showErrorModal(errorMessage);
+                    return;
+                }
+            }).catch(error => {
+                // Tratamento de erro de rede ou erro inesperado
+                showErrorModal(`1 - Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+            });
+        }
+    });
+
+    //** Adicionando suporte ao sortable para as linhas das tabelas *************************************************************
+    $(document).on('mouseenter', '.nutrientes-por-etapa', function () {
+        $(this).sortable({
+            handle: ".moverNutriente", // Só permite arrastar ao clicar no ícone de mover
+            connectWith: ".nutrientes-por-etapa",
+            opacity: 0.8,
+            cursor: 'grabbing',
+            update: function (event, ui) {
+                let nutrientes_por_etapa = [];
+                $(".nutrientes-por-etapa").each(function () {
+                    let etapa = {
+                        "etapa": $(this).data('id'),
+                        "nutriente_ordem": []
+                    };
+                    $(this).children('tr').each(function (index) {
+                        let nutriente = {
+                            "id": $(this).data('id'),
+                            "ordem": index + 1
+                        };
+                        etapa.nutriente_ordem.push(nutriente);
+                    });
+                    nutrientes_por_etapa.push(etapa);
+                });
+
+                // ***** Colocando os dados no formato correto para UPDATE
+                let arrayParaUpdate = [];
+                nutrientes_por_etapa.forEach(etapa => {
+                    etapa.nutriente_ordem.forEach(etapa_mp => {
+                        let mp = { "id": etapa_mp.id, "etapa": etapa.etapa, "ordem": etapa_mp.ordem };
+                        arrayParaUpdate.push(mp);
+                    })
+                })
+
+                console.log('Mover nutriente entre etapas \n', arrayParaUpdate);
+                // ************************************************** Chamando a função para executar a ação na API **********************************
+                // Alterar as matérias primas dentro das etapas
+                req_UPDATE(opt.urlEtapaMp + "/ordenar/m_p", arrayParaUpdate).then(result => {
+
+                    if (!result.success) {
+                        // Tratamento de erro
+                        let errorMessage;
+                        errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                        // Usa a função showErrorModal para mostrar o erro
+                        showErrorModal(errorMessage);
+                        return;
+                    }
+                }).catch(error => {
+                    // Tratamento de erro de rede ou erro inesperado
+                    showErrorModal(`2 - Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+                });
+
+
+            }
+        }).disableSelection();
+    });
+
+    //**  buscar os detalhes do projeto *********************************************************    
+    const projeto_detalhado = (id_projeto = parseInt(getAllUrlParams()['id'])) => {
+
+        //Consultar projetos detalhados......
+        req_GET(opt.urlProjeto + `/detalhado/${id_projeto}`).then(result => {
+
+            if (!result.success) {
+                // Tratamento de erro
+                let errorMessage;
+                errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                // Usa a função showErrorModal para mostrar o erro
+                showErrorModal(errorMessage);
+                return;
+            }
+
+
+            // *************** Detalhes do Projeto ****************************************************************
+            projeto = result.data[0];
+            $('#tituloProjeto').text(`Projeto: ${projeto.nome}`);
+            $('#detalhesProjeto_codigo').text(projeto.codigo);
+            $('#detalhesProjeto_nome').text(projeto.nome);
+            $('#detalhesProjeto_cliente').text(projeto.cliente);
+            $('#detalhesProjeto_data_criacao').text(formatarDataPtBr(projeto.createdAt));
+            $('#detalhesProjeto_data_inicio').text(formatarDataPtBr(projeto.data_inicio));
+            $('#detalhesProjeto_data_termino').text(formatarDataPtBr(projeto.data_termino));
+            $('#detalhesProjeto_status').text(projeto.status[0].status);
+            $('#detalhesProjeto_descricao').text(projeto.descricao);
+            $('#detalhesProjeto_aplicacao').text(projeto.aplicacao);
+            $('#detalhesProjeto_tipo').text(projeto.tipo);
+            $('#detalhesProjeto_natureza_fisica').text(projeto.natureza_fisica);
+            $('#detalhesProjeto_densidade').text(projeto.densidade.toFixed(2));
+            $('#detalhesProjeto_ph').text(projeto.ph);
+            exibirPercentualConcluido(projeto.percentual_concluido);
+
+            // *************** Tabela de nutrientes *****************************************************************  
+
+            $('#tbody_nutricional').empty();  // Limpa o conteúdo da tabela antes de adicionar os novos dados
+
+            projeto.nutrientes.forEach(addDadosTableNutricional); // For usado para adicionar os nutrientes que compoem o projeto
+
+            // *************** Carregar etapas e nutrientes das etapas **********************************************
+            $('#etapa-list').empty();  // Limpa listas de conteúdo
+            projeto.etapas.forEach(criarEtapa);
+
+        }).catch(error => {
+            // Tratamento de erro de rede ou erro inesperado
+            showErrorModal(`03 - Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+        });
+    };
+
+    projeto_detalhado();
+
+    //** Função para compor a "Tabela de nutrientes"*****************************************************************************
+    const addDadosTableNutricional = (nutriente, index) => {
+        let linhaNutriente = `
+            <tr data-bs-toggle="collapse" data-bs-target="#row${index}" aria-expanded="false" aria-controls="row${index}">
+                <td>${nutriente.nome}</td>
+                <td>${nutriente.formula}</td>
+                <td>${nutriente.percentual.toFixed(2)}%</td>
+                <td>
+                <button class="btn btn-link"><i class="fa fa-eye"></i></button>
+                </td>
+                </tr>
+                <tr class="collapse" id="row${index}">
+                    <td colspan="4">
+                    <table class="table">
+                        ${origemDoNutriente(nutriente.origem)}
+                        </table>
+                        </td>
+                        </tr>
+                        `;
+        $('#tbody_nutricional').append(linhaNutriente);
+    }
+
+    // Função complementar para a função addDadosTableNutricional ***************************************************************
+    const origemDoNutriente = (origens) => {
+        let result = '';
+        for (origem of origens) {
+            result += `
+                        <tr>
+                            <td class="text-info">${origem.mp}</td>
+                            <td class="text-info">${origem.percentual.toFixed(2)} %</td>
+                            </tr>                  
+                            `;
+        }
+        return result;
+    }
+
+    //**  exibir o percentual de conclusão do projeto *****************************************************
+    const exibirPercentualConcluido = (percentual) => {
+        if (percentual == null || percentual <= 0) {
+            percentual = 0;
+        }
+
+        let cor = (percentual > 100) ? "bg-warning" : "bg-primary"; // Projeto estourado fica amarelo. 
+        let barraProgressoPrincipal = `
+        <div class="progress-bar progress-bar-striped ${cor}" role="progressbar" style="width: ${percentual.toFixed(2)}%;" aria-valuenow="${percentual.toFixed(2)}" aria-valuemin="0" aria-valuemax="100">${percentual.toFixed(2)}%</div>
+    `;
+
+        let barraProgressoSecundaria = `
+        <div class="progress-bar bg-secondary" role="progressbar" style="width: ${(percentual === 0 ? 100 : (100 - percentual)).toFixed(2)}%;" aria-valuenow="${(percentual === 0 ? 100 : (100 - percentual)).toFixed(2)}" aria-valuemin="0" aria-valuemax="100">${percentual === 0 ? '0%' : (100 - percentual).toFixed(2) + '%'}</div>
+    `;
+
+        let dados = barraProgressoPrincipal + barraProgressoSecundaria;
+
+        $('#percentual_total').html(dados);
+    }
+
+    //**  criar o visual das etapas do projeto ************************************************************
+    const criarEtapa = (etapa) => {
+        if (etapa.id != null) {
+            const etapaItem = `
+                <li class="list-group-item" data-id="${etapa.id}">
+                    <div class="row">
+                        <div class="col-2">
+                            <h5 type="button" class="float-start">
+                                <i class="fa fa-arrows moverEtapa me-2 "></i> <span  data-bs-toggle="collapse" data-bs-target="#etapa-${etapa.id}">${etapa.nome}</span> 
+                            </h5>
+                        </div>
+                        <div class="col-2"></div>
+                        <div class="col-2"></div>
+                        <div class="col-2"></div>
+                        <div class="col-2"></div>
+                        <div class="col-2">
+                            <i class="fa fa-chevron-down ms-2 toggle-icon float-end" style="float:right; cursor:pointer" data-bs-toggle="collapse" data-bs-target="#etapa-${etapa.id}"></i> 
+                            <button class="btn btn-outline-secondary btn-sm" data-id="${etapa.id}" title="excluir" style="float:right; cursor:pointer" onclick="excluirEtapa(${etapa.id})"><i class="fa fa-ban"></i></button> 
+                            <button class="btn btn-outline-secondary btn-sm" data-id="${etapa.id}" title="editar" style="float:right; cursor:pointer" onclick="initModalEtapas(${etapa.id})"><i class="fa fa-edit"></i></button> 
+                        </div>
+    
+                    </div>
+    
+                    <div class="card collapse multi-collapse" id="etapa-${etapa.id}">
+                        <div class="card-body">
+                            <h6 class="card-title">${etapa.descricao}</h6>
+                            <p class="fs-5 mt-2" style="display: flex; flex-direction: row; justify-content: space-between;">
+                                
+                                <button onclick="btn_AddMpNutriente(${etapa.id}, '${etapa.nome}')" type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalMpNutriente">Adicionar matéria prima</button>
+                            </p>
+                            <table class="table" id="tableComposicaoEtapa${etapa.id}">
+                                <thead>
+                                    <tr>
+                                        <th>Ordem</th>
+                                        <th>Matéria Prima</th>
+                                        <th>Percentual</th>
+                                        <th>Peso g/ml</th>
+                                        <th>Tempo de Agitação</th>
+                                      
+                                        <th>Lote</th>
+                                        <th>Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="nutrientes-por-etapa" data-id="${etapa.id}">
+                                    ${addMateriaPrima(etapa.etapa_mp, etapa.id)}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </li>
+            `;
+            $('#etapa-list').append(etapaItem);
+        }
+    };
+
+    //**  adicionar os matérias primas de cada etapa ******************************************************
+    const addMateriaPrima = (etapa_mp, etapa_id) => {
+        let linhasEtapaEp = "";
+        etapa_mp.forEach(e => {
+            linhasEtapaEp += criarLinhaEtapaMp(e.id, e.materia_prima, e.percentual, e.tempo_agitacao, e.observacao, e.lote, e.ordem, etapa_id);
+        });
+        return linhasEtapaEp;
+    };
+
+    //**  criar as linhas para a função  addMateriaPrima() *************************************************
+    const criarLinhaEtapaMp = (idMp, nomeMp, percentualMp, tempoAgitacao, observacao, lote, ordem, etapa_id) => {
+        let densidade = parseFloat($("#detalhesProjeto_densidade").text());
+        let cols = `
+                    <tr id="nutriente_${idMp}" data-id="${idMp}">
+                        <td><i class="fa fa-arrows moverNutriente"></i></td>
+                        <td>${nomeMp}</td>
+                        <td><input type="text" class="percentualMp" value="${percentualMp.toFixed(4)}"></td>
+                        <td><input type="text" class="percentualMp" value="${calculaPeso(percentualMp, densidade)}"></td>
+                        <td><input type="text" class="tempoAgitacao" value="${tempoAgitacao}"></td>
+                    
+                        <td><input type="text" class="lote" value="${lote}"></td>
+                        <td style="min-width: 100px">
+                            <button type="button" class="btn btn-outline-secondary btn-sm salvarComposicao" title="salvar" data-id="${idMp}" data-pos="${ordem}" onclick="salvaComposicao(${idMp},${etapa_id})"><i class="far fa-save"></i></button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm deleteComposicao" title="excluir" data-id="${idMp}" onclick="excluiComposicao(${idMp},${etapa_id})"><i class="fa fa-ban"></i></button>
+                        </td>
+                    </tr>`;
+        return cols;
+    };
+
+
+    const calculaPeso = (densidade, percentual) => {
+
+        let qtVendida = parseFloat($("#quantidadeVendida").text().trim() || '0');
+
+        let pesoGr = (parseFloat(densidade) * parseFloat(percentual)) / 100;
+
+        return pesoGr.toFixed(4);
+    }
+
+
+    // Função para a Inicialização do auto-complete *****************************************************************************
+    $('#modal_nutriente').autocomplete({
+        source: function (request, response) {
+            // Normalizar o termo de busca removendo acentos
+            const searchTerm = removeAcento(request.term.toLowerCase());
+
+            // Filtrar os itens com base no texto digitado, sem acentos
+            const matches = listaDeNutriente.filter(nutriente =>
+                removeAcento(nutriente.nome.toLowerCase()).startsWith(searchTerm)
+            );
+
+            // Mapear os itens para o formato esperado pelo autocomplete
+            response(matches.map(nutriente => ({
+                label: `(${nutriente.formula}) ${nutriente.nome}`, // Texto exibido na lista
+                value: `(${nutriente.formula}) ${nutriente.nome}`, // Valor exibido no campo de entrada ao selecionar
+                id: nutriente.id       // ID do item
+            })));
+        },
+        select: function (event, ui) {
+            $('#addComposicaoProjeto').empty(); // Limpar a tabela
+
+            // Aqui você pode usar o item selecionado (ui.item) para atualizar a tabela ou qualquer outra lógica
+            let id_nutriente = ui.item.id;
+            let percentual = $('#modal_percentual').val().replace(/[^0-9.]/g, ''); // Permitir números e ponto/virgula
+
+            // Consultar as máterias primas que atendem a necessidade. 
+            req_GET(opt.urlMateriaPrima + `?nutriente=${id_nutriente}&percentual=${percentual}`).then(result => {
+
+                if (!result.success) {
+                    // Tratamento de erro
+                    let errorMessage;
+                    errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                    // Usa a função showErrorModal para mostrar o erro
+                    showErrorModal(errorMessage);
+                    return;
+                }
+
+                let dados = result.data;
+                dados.forEach(addPossivelComposicao);
+
+            }).catch(error => {
+                // Tratamento de erro de rede ou erro inesperado
+                showErrorModal(`04 - Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+            });
+        }
+    }).autocomplete("widget").css("z-index", "9999");
+
+
+    const addPossivelComposicao = (recomendacao) => {
+        let { mp_id, mp_nome, percentual, mp_formula, composicao } = recomendacao;
+        let newRow = $('<tr>');
+        let cols = `
+                <td style="display: none;">${mp_id}</td>
+                <td style="display: none;">${mp_formula}</td>
+                <td  style="border-bottom: none;">${mp_nome}</td>
+                <td  style="border-bottom: none;">${percentual}</td>
+                <td  style="border-bottom: none;"><button type="button" title="adicionar" class="btn btn-outline-secondary btn-sm  addMP_Etapa" data-id="${mp_id}"><i class="fa fa-plus-circle"></i></button></td>
+            `;
+        let newRowOrigem = $('<tr>');
+        let colsOrigem = `
+                <td colspan="3" style="border-top: none;">
+                    <ul class="timeline">
+                    ${addOrigemComposicao(composicao)}
+                    </ul>
+                </td>
+            `;
+        newRow.append(cols);
+        newRowOrigem.append(colsOrigem);
+        $('#addComposicaoProjeto').append(newRow);
+        $('#addComposicaoProjeto').append(newRowOrigem);
+    }
+
+    const addOrigemComposicao = (origem) => {
+        let li = '';
+        console.log(origem);
+        origem.forEach(nutri => {
+            li += `<li>
+                    <p>${nutri.percentual.toFixed(2)}%</p><p>-</p>
+                    <p class="float-right">${nutri.nutriente}</>
+                </li>`;
+        });
+        return li;
+    }
+
+    //  Adicionar matéria prima a uma etap.
+    $('#addComposicaoProjeto').on('click', '.addMP_Etapa', function () {
+
+        $("#modal_nutriente").val("")
+        $("#modal_percentual").val("")
+
+        let linha = $(this).closest('tr');
+        let etapa_mp_data = {
+            "etapa": id_etapa,
+            "mp": linha.find('td:eq(0)').text(),
+            "percentual": linha.find('td:eq(3)').text(),
+            "tempo_agitacao": 0,
+            "observacao": "",
+            "ordem": "0"
+        }
+
+        req_INSERT(opt.urlEtapaMp, etapa_mp_data).then(result => {
+
+            if (!result.success) {
+                // Tratamento de erro
+                let errorMessage;
+                errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                // Usa a função showErrorModal para mostrar o erro
+                showErrorModal(errorMessage);
+                return;
+            }
+            projeto_detalhado();
+
+        }).catch(error => {
+            // Tratamento de erro de rede ou erro inesperado
+            showErrorModal(`05 - Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+        });
+
+        setTimeout(() => {
+            $(`#etapa-${id_etapa}`).addClass('show');
+        }, 1000);
+    });
+
+    // colocar o percentual em % *********************************************************************************
+    $('#modal_percentual').on('blur', function () {
+        let value = $(this).val().replace(/[^0-9.,]/g, ''); // Permitir números e ponto/virgula
+        if (value) {
+            //libera o input autocomplete para pesquisar a materia prima
+            $('#modal_nutriente').prop('disabled', false);
+            $('#modal_nutriente').val('');
+            $('#modal_nutriente').prop('placeholder', "Nutriente");
+
+            // Substituir vírgulas por pontos
+            value = value.replace(',', '.');
+
+            // Converte para número e fixa 2 casas decimais
+            let numericValue = parseFloat(value);
+            if (!isNaN(numericValue)) {
+                // Exibe o valor com até 2 casas decimais e adiciona o símbolo de porcentagem
+                $(this).val(numericValue + '%');
+            } else {
+                $(this).val('');
+            }
+        } else {
+            $(this).val('');
+        }
+    });
+
+
+    let id_etapa;
+    const btn_AddMpNutriente = (id, nome) => {
+        id_etapa = id;
+        $('#titulo_Etapa').text(nome);
+        $('#modal_percentual').val("");
+        $('#modal_nutriente').val("");
+        $('#addComposicaoProjeto').empty(); //** Limpar consulta de nutrientes e percentual
+    }
+
+    //** Função auto-executável para buscar todos os nutrientes cadastrados  ******************************************************  
+    let listaDeNutriente;
+    (() => {
+        //Consultar projetos detalhados......
+        req_GET(opt.urlNutriente).then(result => {
+
+            if (!result.success) {
+                // Tratamento de erro
+                let errorMessage;
+                errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                // Usa a função showErrorModal para mostrar o erro
+                showErrorModal(errorMessage);
+                return;
+            }
+
+            listaDeNutriente = result.data;
+
+        }).catch(error => {
+            // Tratamento de erro de rede ou erro inesperado
+            showErrorModal(`06 - Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+        });
+    })();
+
+
+    // salva alteracao na materia prima adicionada
+    function salvaComposicao(idMp, idEtapa) {
+
+        // Encontra a linha (tr) correspondente ao idMp
+        const row = document.querySelector(`tr[data-id="${idMp}"]`);
+
+        if (!row) {
+            console.error(`Linha com idMp ${idMp} não encontrada.`);
+            return;
+        }
+
+        // Obtém os valores dos inputs na linha
+        const percentualMp = row.querySelector('.percentualMp').value;
+        const tempoAgitacao = row.querySelector('.tempoAgitacao').value;
+        // const observacao = row.querySelector('.observacao').value;
+        const lote = row.querySelector('.lote').value;
+
+        jsonData = {
+            "percentual": percentualMp,
+            "tempo_agitacao": tempoAgitacao,
+            "observacao": "",
+            "lote": lote
+        };
+
+        req_UPDATE(opt.urlEtapaMp + "/" + idMp, jsonData).then(result => {
+
+            if (!result.success) {
+                // Tratamento de erro
+                let errorMessage;
+                errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                // Usa a função showErrorModal para mostrar o erro
+                showErrorModal(errorMessage);
+                return;
+            }
+
+            projeto_detalhado(id_projeto)
+
+        }).catch(error => {
+            // Tratamento de erro de rede ou erro inesperado
+            showErrorModal(`07 - Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+        });
+
+        setTimeout(() => {
+            $(`#etapa-${idEtapa}`).addClass('show');
+        }, 1000);
+
+    }
+
+
+
+    // deleta materia prima adicionada
+    function excluiComposicao(idMp, idEtapa) {
+        // Exibe uma caixa de confirmação para o usuário
+        const confirmar = window.confirm("Tem certeza de que deseja excluir este item?");
+
+        // Se o usuário confirmar
+        if (confirmar) {
+            // Encontra a linha (tr) correspondente ao idMp
+            const row = document.querySelector(`tr[data-id="${idMp}"]`);
+
+            if (!row) {
+                console.error(`Linha com idMp ${idMp} não encontrada.`);
+                return;
+            }
+
+            req_DELETE(opt.urlEtapaMp + "/" + idMp).then(result => {
+
+                if (!result.success) {
+                    // Tratamento de erro
+                    let errorMessage;
+                    errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                    // Usa a função showErrorModal para mostrar o erro
+                    showErrorModal(errorMessage);
+                    return;
+                }
+
+                projeto_detalhado()
+
+            }).catch(error => {
+                // Tratamento de erro de rede ou erro inesperado
+                showErrorModal(`08 - Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+            });
+        }
+        setTimeout(() => {
+            $(`#etapa-${idEtapa}`).addClass('show');
+        }, 1000);
+    }
+
+    // edita etapa
+    function initModalEtapas(id = null) {
+        // Limpa o formulário
+        $('#formCadastrarEtapaProjeto').trigger("reset");
+
+        if (id) {
+            // Se o ID for fornecido, configura o modal para edição
+            $('#modalEtapas .modal-title').text('Editar Etapa');
+
+            // Preenche os campos com os dados da etapa usando AJAX
+            req_GET(opt.urlEtapa + `/${id}`).then(result => {
+
+                if (!result.success) {
+                    // Tratamento de erro
+                    let errorMessage;
+                    errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                    // Usa a função showErrorModal para mostrar o erro
+                    showErrorModal(errorMessage);
+                    return;
+                }
+
+                const data = result.data[0];
+
+                $('#nome').val(data.nome);
+                $('#descricao').val(data.descricao);
+
+                // Altera o botão "Cadastrar" para "Atualizar"
+                $('#etapaCadastrar').text('Atualizar').data('action', 'editar').data('id', id);
+
+
+                // Mostra o modal após preencher os dados
+                $('#modalEtapas').modal('show');
+            }).catch(error => {
+                // Tratamento de erro de rede ou erro inesperado
+                showErrorModal(`09 - Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+            });
+
+        } else {
+            // Se o ID não for fornecido, configura o modal para cadastro
+            $('#modalEtapas .modal-title').text('Cadastrar Etapa');
+            $('#etapaCadastrar').text('Cadastrar').data('action', 'cadastrar');
+
+            // Mostra o modal para cadastro
+            $('#modalEtapas').modal('show');
+        }
+
+        // Submissão do formulário
+        $('#formCadastrarEtapaProjeto').off('submit').on('submit', function (e) {
+            e.preventDefault();
+
+            const action = $('#etapaCadastrar').data('action');
+            const id = $('#etapaCadastrar').data('id');
+
+            // Serializa os dados do formulário em uma string URL-encoded
+            let formData = $(this).serializeArray();
+
+            // Converte a string serializada em um objeto JSON
+            let jsonData = {};
+            formData.forEach(function (item) {
+                jsonData[item.name] = item.value;
+            });
+
+            id_projeto = parseInt(getAllUrlParams()['id']);
+            jsonData.projeto = id_projeto;
+
+            if (action === 'editar') {
+                // Envia requisição de atualização
+                req_UPDATE(opt.urlEtapa + `/${id}`, jsonData).then(result => {
+
+                    if (!result.success) {
+                        // Tratamento de erro
+                        let errorMessage;
+                        errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                        // Usa a função showErrorModal para mostrar o erro
+                        showErrorModal(errorMessage);
+                        return;
+                    }
+                    projeto_detalhado()
+                    // Fecha o modal após a atualização
+                    $('#modalEtapas').modal('hide');
+                }).catch(error => {
+                    // Tratamento de erro de rede ou erro inesperado
+                    showErrorModal(`10 - Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+                });
+            } else {
+                // Envia requisição de criação
+                jsonData.ordem = 0
+
+                req_INSERT(opt.urlEtapa, jsonData).then(result => {
+                    if (!result.success) {
+                        // Tratamento de erro
+                        let errorMessage;
+                        errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                        // Usa a função showErrorModal para mostrar o erro
+                        showErrorModal(errorMessage);
+                        return;
+                    }
+                    projeto_detalhado()
+                    // Fecha o modal após o cadastro
+                    $('#modalEtapas').modal('hide');
+                }).catch(error => {
+                    // Tratamento de erro de rede ou erro inesperado
+                    showErrorModal(`11 - Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+                });
+            }
+        });
+
+        // Reseta o formulário e o título do modal quando o modal é fechado
+        $('#modalEtapas').on('hidden.bs.modal', function () {
+            $('#formCadastrarEtapaProjeto').trigger("reset");
+            $('#etapaCadastrar').text('Cadastrar').removeData('action').removeData('id');
+            $('#modalEtapas .modal-title').text('Cadastrar Etapa');
+        });
+    }
+
+    function excluirEtapa(idEt) {
+        // Exibe uma caixa de confirmação para o usuário
+        const confirmar = window.confirm("Tem certeza de que deseja excluir esta etapa?");
+
+        // Se o usuário confirmar
+        if (confirmar) {
+
+            req_DELETE(opt.urlEtapa + `/${idEt}`).then(result => {
+
+                if (!result.success) {
+                    // Tratamento de erro
+                    let errorMessage;
+                    errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                    // Usa a função showErrorModal para mostrar o erro
+                    showErrorModal(errorMessage);
+                    return;
+                }
+
+                projeto_detalhado()
+
+
+            }).catch(error => {
+                // Tratamento de erro de rede ou erro inesperado
+                showErrorModal(`12  - Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+            });
+        }
+    }
+
+    // adiciona href no botão imprimir
+    id_projeto = parseInt(getAllUrlParams()['id']);
+    $(".btn-imprimir").attr('href', `/page/projeto_impressao.html?id=${id_projeto}`)
+
+</script>

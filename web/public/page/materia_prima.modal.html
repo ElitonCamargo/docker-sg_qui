@@ -1,0 +1,202 @@
+<h3>Cadastrar Garantia</h3>
+<div class="garantiaCadastra row">
+    <div class="col-md-6">
+        <input class="form-control" type="text" name="nutriente" id="nutriente" placeholder="nutriente" required>
+    </div>
+    <div class="col-md-5">
+        <input class="form-control" type="text" name="garantia" id="garantia" placeholder="%" required>
+    </div>
+    <div class="col-md-1">
+        <button class="btn btn-secondarybtn btn-outline-secondary btn-sm form-control" id="btnGarantiaCadastra"><i
+                class="fa fa-plus" aria-hidden="true"></i></button>
+    </div>
+</div>
+<hr>
+<h3>Garantias Cadastadas</h3>
+<table id="tbGarantias" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Nutriente</th>
+            <th>Percentual</th>
+            <th>Excluir</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+<style>
+    .ui-autocomplete {
+        position: absolute;
+        z-index: 10000;
+        overflow-y: auto;
+        overflow-x: hidden;
+        background-color: #212529;
+        color: #dee2e6;
+    }
+</style>
+<script>
+    $(function () {
+        // Recuperar o objeto 'materia_prima' do data-* atributo
+        const idMateriaPrima = $('#modalGarantias').data('materiaPrimaId');
+
+        //adiciona garantias já cadastradas
+        carregaGarantias()
+
+        // autocomplete nutrientes
+        $("#nutriente").autocomplete({
+            source: function (request, result) {
+                let searchTerm = removeAcento(request.term.toLowerCase());
+
+                req_GET(`${opt.urlNutriente}?nome=${searchTerm}`)
+                    .then(result => {
+                        if (!result.success) {
+                            throw new Error('Erro ao buscar dados: ' + result.status);
+                        }
+                        return result.data;
+                    })
+
+                    .then(function (data) {
+                        var suggestions = data.map(function (item) {
+                            return {
+                                label: item.nome,
+                                value: item.nome,
+                                idNutriente: item.id,
+                                idMateriaPrima: idMateriaPrima
+                            };
+                        });
+
+                        // Normaliza e filtra as sugestões removendo acentos antes da comparação
+                        var filteredSuggestions = suggestions.filter(function (item) {
+                            return removeAcento(item.label.toLowerCase()).indexOf(searchTerm) !== -1;
+                        });
+
+                        result(filteredSuggestions);
+                    })
+                    .catch(function (error) {
+                        alert("Erro14: Erro ao buscar no autocomplete de nutrientes");
+                    });
+            },
+            select: function (event, ui) {
+                $(".garantiaCadastra").off("click", "#btnGarantiaCadastra");
+
+                $(".garantiaCadastra").on("click", "#btnGarantiaCadastra", function () {
+                    let data = {};
+                    let garantia = parseFloat($("#garantia").val());
+
+                    data = {
+                        "materia_prima": ui.item.idMateriaPrima,
+                        "nutriente": ui.item.idNutriente,
+                        "percentual": garantia
+                    };
+
+                    if (garantia !== null && garantia !== undefined) {
+                        if (ui.item.idMateriaPrima && ui.item.idNutriente) {
+                            cadastraGarantia(data);
+                        } else {
+                            alert("Erro12: Erro ao selecionar o nutriente");
+                        }
+                    } else {
+                        alert("Erro13: Erro ao selecionar valor da garantia");
+                    }
+                });
+            }
+        });
+
+
+
+
+        // exclui garantia
+        $("#tbGarantias").on("click", ".btn-excluir-garantia", function () {
+            let id = "";
+            id = $(this).data('id');
+            excluiGarantia(id)
+        })
+
+
+        //////////// FUNÇOES//////////////
+
+        function carregaGarantias() {
+            $('#tbGarantias tbody').empty()
+
+
+            req_GET(opt.urlGarantiaMateriaPrima + `/${idMateriaPrima}`).then(result => {
+
+                data = result.data;
+
+                if (!result.success) {
+                    // Tratamento de erro
+                    let errorMessage;
+                    errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                    // Usa a função showErrorModal para mostrar o erro
+                    // showErrorModal(errorMessage);
+
+                    data = [];
+                }
+
+
+                let tBodyData;
+
+                data.forEach(nutriente => {
+                    tBodyData += `
+                                        <tr>
+                                            <td>${nutriente.nutriente_Nome}</td>
+                                            <td>${nutriente.garantia_Percentual}</td>
+                                            <td><button class="btn btn-outline-secondary btn-sm btn-excluir-garantia" data-id="${nutriente.garantia_Id}" ><i class="fa-solid fa-ban"></i></button></td>
+                                        </tr>
+                                        `
+                });
+
+                $('#tbGarantias tbody').html(tBodyData)
+
+            }).catch(error => {
+                // Tratamento de erro de rede ou erro inesperado
+                showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+            });
+        }
+
+        function cadastraGarantia(data) {
+
+            req_INSERT(opt.urlGarantia, data)
+                .then(result => {
+                    if (!result.success) {
+                        // Tratamento de erro
+                        let errorMessage;
+                        errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                        // Usa a função showErrorModal para mostrar o erro
+                        showErrorModal(errorMessage);
+                        return;
+                    }
+
+                    carregaGarantias();
+
+                }).catch(error => {
+                    // Tratamento de erro de rede ou erro inesperado
+                    showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+                });
+        }
+
+        function excluiGarantia(garantia_Id) {
+            req_DELETE(opt.urlGarantia + "/" + garantia_Id)
+                .then(result => {
+                    if (!result.success) {
+                        // Tratamento de erro
+                        let errorMessage;
+                        errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                        // Usa a função showErrorModal para mostrar o erro
+                        showErrorModal(errorMessage);
+                        return;
+                    }
+                    carregaGarantias();
+
+                }).catch(error => {
+                    // Tratamento de erro de rede ou erro inesperado
+                    showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+                });
+        }
+
+
+    });
+
+
+
+
+</script>

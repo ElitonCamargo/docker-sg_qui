@@ -1,0 +1,281 @@
+<!-- 
+ 
+"id": 1,
+"nome": "Administrador",
+"email": "admin@sgqui.com",
+"permissao": 0,
+"avatar": null,
+"status": 1,
+"createdAt": "2024-06-05T09:56:50.000Z",
+"updatedAt": "2024-06-05T09:56:50.000Z" -->
+
+
+<h2>Usuários</h2>
+<div class="table-responsive">
+    <table id="tabela-usuario" class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Os dados da tabela serão preenchidos dinamicamente pelo DataTable -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="detalhesModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Detalhes do usuario</h5>
+                <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+
+            <form id="formEditarUsuario">
+                <div class="modal-body" id="detalhesUsuario">
+                    <!-- Detalhes do usuario serão exibidos aqui -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnEditar" class="btn btn-outline-secondary btn-sm">Editar</button>
+                    <button type="submit" id="btnSalvar" class="btn btn-outline-secondary btn-sm d-none">Salvar
+                        Alterações</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-fecha-modal"
+                        data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="confirmacaoExclusaoModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Deseja realmente excluir o item <b id="nomeExclui"></b>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="confirmarExclusao">Confirmar Exclusão</button>
+                <button type="button" class="btn btn-secondary btn-fecha-modal"
+                    data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+
+        let data;
+        let table;
+        //variavel de controle se algo foi alterado
+        let alterado = 0;
+
+        req_GET(opt.urlUsuario).then((result) => {
+
+            if (!result.success) {
+                // Tratamento de erro
+                let errorMessage;
+                errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                // Usa a função showErrorModal para mostrar o erro
+                showErrorModal(errorMessage);
+                return;
+            }
+
+            data = result.data;
+
+            // INICIA DATATABLE
+            table = $('#tabela-usuario').DataTable({
+                data: data,
+                order: [[3, 'desc']],
+                columns: [
+                    { title: 'Nome', data: 'nome' },
+                    { title: 'Login', data: 'email' },
+                    { // Coluna para os botões de ação
+                        title: 'Ações',
+                        data: null,
+                        orderable: false,
+
+                        render: function (data, type, row) {
+                            return `
+                          <button class="btn btn-outline-secondary btn-sm btn-detalhes-editar" data-id="${row.id}" data-toggle="modal" data-target="#detalhesModal" title="Ver/Editar"><i class="fa-solid fa-eye"></i>/<i class="fa-solid fa-pen-to-square"></i></button>
+                          <button class="btn btn-outline-secondary btn-sm btn-excluir" data-id="${row.id}" data-nome="${row.nome}" title="Excluir"><i class="fa-solid fa-ban"></i></button>
+                      `;
+                        }
+                    },
+                    { title: 'Update', data: 'updatedAt', visible: false }
+                ],
+                columnDefs: [
+                    { targets: 2, autoWidth: true } // Ativa o ajuste automático da largura para a coluna ações
+                ],
+                // Habilita a pesquisa global
+                searching: true
+            });
+            //FIM DATATABLE
+
+
+
+            // Adiciona campos de pesquisa em cada cabeçalho de coluna
+            $('#tabela-usuario thead th').each(function () {
+                let title = $(this).text();
+                if (title !== "Ações") {
+                    $(this).html(`<input type="text" class="form-control form-control-sm" placeholder="${title} "/>`);
+                }
+            });
+
+            // Adiciona um evento de pesquisa para cada campo de entrada de texto nas colunas
+            $('#tabela-usuario thead th input').on('keyup', function () {
+                let columnIndex = $(this).closest('th').index(); // Obtém o índice da coluna
+                table.column(columnIndex).search(this.value).draw();
+            });
+
+
+            ///////////////EDITAR///////////////////////
+            //Abre modal de visualização e edição de usuario
+            $('#tabela-usuario').on('click', '.btn-detalhes-editar', function () {
+                const id = $(this).data('id');
+                const usuario = data.find(item => item.id === id);
+                exibirDetalhes(usuario);
+            });
+
+
+            // Função para exibir os detalhes em um modal
+            function exibirDetalhes(usuario) {
+                let html = `
+                <div class="form-group">
+                    <div class="form-group">
+                      <label for="nome">Nome:</label>
+                      <input type="text" class="form-control" id="nome" name="nome" value="${usuario.nome}" readonly>
+                    </div>
+                    <div class="form-group">
+                      <label for="email">Email:</label>
+                      <input type="email" class="form-control" id="email" name="email" value="${usuario.email}" readonly>
+                    </div>
+                    <div class="form-group">
+                      <label for="senha">Nova senha:</label>
+                      <input type="password" class="form-control" id="senha" name="senha" placeholder="******" required readonly minlength="6">
+                    </div>
+                    <input type="hidden" id="id" name="id" value="${usuario.id}">
+                </div>
+                 `;
+
+                $('#detalhesUsuario').html(html);
+                $('#detalhesModal').modal('show');
+            }
+
+            // Adicionar evento de clique para o botão "Editar"
+            $('#detalhesModal').on('click', '#btnEditar', function () {
+                $('.form-control').prop('readonly', false);
+                $('#btnEditar').addClass('d-none');
+                $('#btnSalvar').removeClass('d-none');
+            });
+
+            // Adicionar evento de submit para o formulário de edição do usuario
+            $('#formEditarUsuario').on('submit', function (event) {
+
+                event.preventDefault(); // Impedir o envio padrão do formulário
+                const jsonData = serializadoParaJSON($(this).serialize());
+
+                req_UPDATE(opt.urlUsuario + "/" + jsonData.id, jsonData)
+                    .then(result => {
+
+                        if (!result.success) {
+                            // Tratamento de erro
+                            let errorMessage;
+                            errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                            // Usa a função showErrorModal para mostrar o erro
+                            showErrorModal(errorMessage);
+                            return;
+                        }
+
+                        $('#detalhesModal .modal-body').html(`${jsonData.nome} atualizado com sucesso!`);
+                        $('#detalhesModal #btnSalvar').hide();
+                        alterado = 1
+                    }).catch(error => {
+                        // Tratamento de erro de rede ou erro inesperado
+                        showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+                    });
+            });
+
+            //Limpa modal ao fechar
+            $('#detalhesModal').on('hidden.bs.modal', function () {
+                $('#detalhesUsuario').empty(); // Limpar o conteúdo do usuario com id 'detalhesUsuario'
+                $('#btnSalvar').addClass('d-none'); // Ocultar o botão "Salvar"
+                $('#btnEditar').removeClass('d-none'); // Exibir o botão "Editar"
+            });
+            ///////////////FIM EDITAR///////////////////////
+
+            ///////////////EXCLUIR///////////////////////
+            // Adicionar evento de clique para o botão "Excluir"
+            $('#tabela-usuario').on('click', '.btn-excluir', function () {
+                const id = $(this).data('id');
+                const nome = $(this).data('nome');
+                // Faça algo com o ID, como confirmar a exclusão do usuario
+                excluirUsuario(id, nome);
+            });
+
+            function excluirUsuario(id, nome) {
+
+                if(id == 1){
+                    showErrorModal("Não é permitido excluir este usuário!");
+                    return;
+                }
+                // Exibe o modal de confirmação de exclusão com o nome do item
+                $('#nomeExclui').text(nome);
+                $('#confirmacaoExclusaoModal').modal('show');
+
+                // Evento ao clicar no botão "Confirmar Exclusão" no modal de confirmação
+                $('#confirmarExclusao').on('click', function () {
+
+                    req_DELETE(opt.urlUsuario + "/" + id).then((response) => {
+                        if (!result.success) {
+                            // Tratamento de erro
+                            let errorMessage;
+                            errorMessage = `${result.message || 'Erro desconhecido.'}`;
+                            // Usa a função showErrorModal para mostrar o erro
+                            showErrorModal(errorMessage);
+                            return;
+                        }
+                        // Fecha o modal de confirmação de exclusão
+                        $('#confirmacaoExclusaoModal').modal('hide');
+                        alterado = 1;
+                    }).catch(error => {
+                        // Tratamento de erro de rede ou erro inesperado
+                        showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+                    });
+                });
+            }
+
+            // FUNCOES AUXILIARES
+            // FUNÇÕES AUXILIARES
+            $('.modal').on('hidden.bs.modal', function () {
+                if (alterado !== 0) {
+                    req_GET(opt.urlUsuario).then((res) => {
+                        let data = res.data; // Certifique-se de que 'data' está na resposta correta
+                        if (data && table) {
+                            table.clear().rows.add(data).draw(); // Limpa a tabela, adiciona os novos dados e redesenha
+                        } else {
+                            console.error("Erro: Dados ou tabela não encontrados.");
+                        }
+                    }).catch((error) => {
+                        console.error("Erro ao fazer a requisição:", error);
+                    });
+                }
+            });
+
+        })
+    })
+</script>

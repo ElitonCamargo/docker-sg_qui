@@ -1,0 +1,735 @@
+<!-- Estilo para o filtro ******************************************************************************************** -->
+<style>
+  .filter-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5em 0.75em;
+    font-size: 1rem;
+    border-radius: 20px;
+    border-style: solid;
+    border-width: 1px;
+    margin-right: 0.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .filter-badge .remove-filter {
+    margin-left: 0.5em;
+    cursor: pointer;
+  }
+
+  .filter-badge .remove-filter:hover {
+    color: red;
+  }
+</style>
+<!-- ***************************************************************************************************************** -->
+<h2>Projetos</h2>
+
+
+<!-- *HTML filtro***************************************************************************************************** -->
+
+<div class="accordion" id="accordionExample">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+        aria-expanded="false" aria-controls="collapseOne">
+        <i class="fa fa-filter" aria-hidden="true" style="margin-right: 10px;"></i> Filtro avançado
+      </button>
+    </h2>
+    <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+      <div class="accordion-body">
+        <!-- Formulário de busca avançada -->
+
+        <div class="row">
+          <div class="col">
+            <input type="text" class="form-control" id="elemento_filtro" placeholder="Ex: Nitrogênio"
+              aria-label="Ex: Nitrogênio">
+          </div>
+          <div class="col">
+            <input type="number" class="form-control" id="percentual-min" placeholder="Ex: 5" aria-label="Ex: 5">
+          </div>
+          <div class="col">
+            <input type="number" class="form-control" id="percentual-max" placeholder="Ex: 7" aria-label="Ex: 7">
+          </div>
+          <div class="col">
+            <button type="button" id="add-filter" class="btn btn-outline-secondary">
+              <i class="fa fa-plus-circle" aria-hidden="true"></i>
+              Aplicar Filtro
+            </button>
+          </div>
+        </div>
+
+        <!-- Lista de filtros aplicados -->
+        <div class="mt-4">
+          <div id="filter-list"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ***************************************************************************************************************** -->
+
+<table id="tabela-projetos" class="table table-striped table-bordered">
+  <thead>
+    <tr>
+      <!-- <th>Update</th> -->
+      <th>Data Criação</th>
+      <th>Código</th>
+      <th>Nome</th>
+      <th>Início</th>
+      <th>Término</th>
+      <th>Densidade</th>
+      <th>PH</th>
+      <th>Tipo</th>
+      <th>Aplicação</th>
+      <th>Natureza Física</th>
+      <th>Status</th>
+      <th style="width: 255px;">Ações</th>
+      <th>Update</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- Os dados da tabela serão preenchidos dinamicamente pelo DataTable -->
+  </tbody>
+</table>
+
+<!-- Modal -->
+<div class="modal modal-xl fade" id="detalhesModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Detalhes do projeto</h5>
+        <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formEditarProjeto">
+        <div class="modal-body" id="detalhesProjeto">
+          <!-- Detalhes do projeto serão exibidos aqui -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btnEditar" class="btn btn-outline-secondary btn-sm"
+            data-dismiss="modal">Editar</button>
+          <button type="submit" id="btnSalvar" class="btn btn-outline-secondary btn-sm d-none">Salvar
+            Alterações</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm btn-fecha-modal"
+            data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmação de Clonar -->
+<div class="modal fade" id="clonarProjeto" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmar clone do projeto</h5>
+        <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Deseja realmente clonar o projeto <b id="nomeClone"></b>?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger confirmarClone">Confirmar Clone</button>
+        <button type="button" class="btn btn-secondary btn-fecha-modal" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="confirmacaoExclusaoModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmar Exclusão</h5>
+        <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Deseja realmente excluir o projeto <b id="nomeExclui"></b>?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="confirmarExclusao">Confirmar Exclusão</button>
+        <button type="button" class="btn btn-secondary btn-fecha-modal" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  $(function () {
+
+    // -- *Javascript filtro avançado ************************************************************************************* -->
+    $('#add-filter').click(function () {
+      // Captura os valores dos campos
+      const elemento = $('#elemento_filtro').val().trim();
+      const percentualMin = $('#percentual-min').val().trim();
+      const percentualMax = $('#percentual-max').val().trim();
+
+      if (elemento && percentualMin && percentualMax) {
+        // Cria um item de filtro com estilo de "badge"
+        const filterItem = `
+                    <div class="filter-badge">
+                      <span style="display: none">${elemento_select[0]}-${elemento_select[1]}::</span>
+                        ${elemento} (${percentualMin}% - ${percentualMax}%)
+                        <span class="remove-filter">&times;</span>
+                    </div>
+                `;
+        // Adiciona o item à lista de filtros
+        $('#filter-list').append(filterItem);
+
+        // Limpa os campos do formulário
+        $('#elemento_filtro').val('');
+        $('#percentual-min').val('');
+        $('#percentual-max').val('');
+
+        // Exibir dados do filtro
+        getFiltro();
+
+
+      } else {
+        alert('Por favor, preencha todos os campos.');
+      }
+    });
+
+    // Remover filtro
+    $('#filter-list').on('click', '.remove-filter', function () {
+      $(this).closest('.filter-badge').remove();
+      // Exibir dados do filtro
+      getFiltro();
+    });
+
+
+    // Listar dados filtrados
+
+    const getFiltro = () => {
+      const filters = [];
+      $('#filter-list .filter-badge').each(function () {
+        const filterTexts = $(this).text().trim().replace('×', '').trim();
+        const [elementoSelected, filterText] = filterTexts.split('::');
+        const [id, tipo] = elementoSelected.split('-');
+        const [elemento, range] = filterText.trim().split(' (');
+        const [percentualMin, percentualMax] = range.replace(/%/g, '').replace(')', '').split(' - ');
+
+        filters.push({
+          tipo: tipo.trim(),
+          id: id.trim(),
+          percentual: [percentualMin.trim(), percentualMax.trim()]
+        });
+      });
+      let query = filters.length > 0 ? `?filtro_avancado=${JSON.stringify(filters)}` : '';
+
+      req_GET(opt.urlProjeto + query).then((result) => {
+        if (!result.success) {
+          // Tratamento de erro
+          let errorMessage;
+          errorMessage = `${result.message || 'Erro desconhecido.'}`;
+          // Usa a função showErrorModal para mostrar o erro
+          showErrorModal(errorMessage);
+          return;
+        }
+        data = result.data; // Atualiza os dados com a resposta da requisição
+        table.clear().rows.add(data).draw(); // Limpa a tabela, adiciona os novos dados e redesenha
+      }).catch(error => {
+        // Tratamento de erro de rede ou erro inesperado
+        showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+      });
+
+    }
+
+    //** Consultar materia prima e nutriente para o auto-complete **************************************************  
+    let listaDeElementosDoFiltro = [];
+    (() => {
+      req_GET(opt.urlNutriente).then(result => {
+
+        if (!result.success) {
+          // Tratamento de erro
+          let errorMessage;
+          errorMessage = `${result.message || 'Erro desconhecido.'}`;
+          // Usa a função showErrorModal para mostrar o erro
+          showErrorModal(errorMessage);
+          return;
+        }
+
+        listaDeElementosDoFiltro = result.data.map(elemento => {
+          return { tipo: "nutriente", id: elemento.id, nome: elemento.nome, formula: elemento.formula }
+        });
+
+        (() => {
+          req_GET(opt.urlMateriaPrima).then(result => {
+            if (result.success) {
+              listaDeElementosDoFiltro = listaDeElementosDoFiltro.concat(result.data.map(elemento => {
+                return { tipo: "materia_prima", id: elemento.id, nome: elemento.nome, formula: elemento.formula }
+              }));
+            }
+          }).catch(error => console.error('Erro capturado:', error));
+        })();
+
+
+      }).catch(error => {
+        // Tratamento de erro de rede ou erro inesperado
+        showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+      });
+    })();
+
+    console.log(listaDeElementosDoFiltro)
+
+    // Função para a Inicialização do auto-complete *****************************************************************************
+    let elemento_select = [];
+
+    $('#elemento_filtro').autocomplete({
+      source: function (request, response) {
+        // Normalizar o termo de busca removendo acentos
+        const searchTerm = removeAcento(request.term.toLowerCase());
+
+        // Filtrar os itens com base no texto digitado, sem acentos
+        const matches = listaDeElementosDoFiltro.filter(elemento =>
+          removeAcento(elemento.nome.toLowerCase()).startsWith(searchTerm)
+        );
+
+        // Mapear os itens para o formato esperado pelo autocomplete
+        response(matches.map(elemento => ({
+          label: elemento.nome + (elemento.formula ? ' - (' + elemento.formula + ')' : ''), // Texto exibido na lista
+          value: elemento.nome, // Valor exibido no campo de entrada ao selecionar
+          id: elemento.id,       // ID do item
+          tipo: elemento.tipo    // O tipo é passado mas não exibido visualmente
+        })));
+      },
+      select: function (event, ui) {
+        // Guardar o ID e o tipo do elemento selecionado
+        elemento_select[0] = ui.item.id;
+        elemento_select[1] = ui.item.tipo;
+      }
+    }).autocomplete("widget").css("z-index", "9999");
+
+
+
+
+    // *****************************************************************************************************************
+
+    // MONTAGEM DA TABELA
+    let data;
+    let table;
+    //variavel de controle se algo foi alterado
+    let alterado = 0;
+
+    req_GET(opt.urlProjeto).then((result) => {
+
+      data = result.data;
+      if (!result.success) {
+        // Tratamento de erro
+        let errorMessage;
+        errorMessage = `${result.message || 'Erro desconhecido.'}`;
+        // Usa a função showErrorModal para mostrar o erro
+        //showErrorModal(errorMessage);
+        data = null;
+      }
+
+      // INICIA DATATABLE
+      table = $('#tabela-projetos').DataTable({
+        data: data,
+        order: [[12, 'desc']],
+        language: {
+          emptyTable: "Não foram encontrados registros"
+        },
+        columns: [
+
+          {
+            title: 'Data Criação', data: 'createdAt',
+            render: function (data, type, row) {
+              return formatarDataPtBr(row.createdAt)
+            }
+          },
+          { title: 'Código', data: 'codigo', visible: true },
+          { title: 'Nome', data: 'nome' },
+          {
+            title: 'Início',
+            data: null,
+            render: function (data, type, row) {
+              return formatarDataPtBr(row.data_inicio)
+            }
+          },
+          { title: 'Densidade', data: 'densidade', visible: false },
+          { title: 'PH', data: 'ph' },
+          { title: 'Tipo', data: 'tipo' },
+          { title: 'Aplicação', data: 'aplicacao', visible: false },
+          { title: 'Natureza Física', data: 'natureza_fisica' },
+          {
+            title: 'Status',
+            data: null,
+            render: function (data, type, row) {
+              return row.status[0].status;
+            }
+          },
+          {
+            title: 'Término',
+            data: null,
+            render: function (data, type, row) {
+              return formatarDataPtBr(row.data_inicio)
+            }
+          },
+          { // Coluna para os botões de ação
+            title: 'Ações',
+            data: null,
+            orderable: false,
+
+            render: function (data, type, row) {
+              return `
+                          <button class="btn btn-outline-secondary btn-sm btn-detalhes-editar" data-id="${row.id}" data-toggle="modal" data-target="#detalhesModal" title="Ver/Editar"><i class="fa-solid fa-eye"></i>/<i class="fa-solid fa-pen-to-square"></i></button>
+                          <button class="btn btn-outline-secondary btn-sm btn-clonar" data-id="${row.id}" data-nome="${row.nome}" data-toggle="modal" data-target="#clonarProjeto" title="Clonar Projeto"><i class="fa-solid fa-clone"></i></button>
+                          <a href="/projeto/detalhado?id=${row.id}" class="btn btn-outline-secondary btn-sm btn-etapas" title="Etapas"><i class="fa-solid fa-tasks"></i></a>
+                          <a href="/page/projeto_impressao.html?id=${row.id}"  class="btn btn-outline-secondary btn-sm btn-imprimir" title="Imprimir"><i class="fa-solid fa-print"></i></a>
+                          <button class="btn btn-outline-secondary btn-sm btn-excluir" data-id="${row.id}" data-nome="${row.nome}" title="Excluir"><i class="fa-solid fa-ban"></i></button>
+                          `;
+            }
+          },
+          { title: 'Update', data: 'updatedAt', visible: false }
+        ],
+        // Habilita a pesquisa global
+        searching: true
+      });
+      //FIM DATATABLE
+
+
+
+      // Adiciona campos de pesquisa em cada cabeçalho de coluna
+      $('#tabela-projetos thead th').each(function () {
+        let title = $(this).text();
+        if (title !== "Ações") {
+          $(this).html(`<input type="text" class="form-control form-control-sm" placeholder="${title} "/>`);
+        }
+      });
+
+      // Adiciona um evento de pesquisa para cada campo de entrada de texto nas colunas
+      $('#tabela-projetos thead th input').on('keyup', function () {
+        let columnIndex = $(this).closest('th').index(); // Obtém o índice da coluna
+        table.column(columnIndex).search(this.value).draw();
+      });
+
+      //Abre modal de visualização e edição de projetos
+      $('#tabela-projetos').on('click', '.btn-detalhes-editar', function () {
+        const id = $(this).data('id');
+        const projeto = data.find(item => item.id === id);
+        exibirDetalhes(projeto);
+      });
+
+
+      // Função para exibir os detalhes em um modal
+      function exibirDetalhes(projeto) {
+
+        //cria select do status
+        let selectStatus = `<select class="form-select" id="status" name="status" disabled>`;
+        let optionStatus = ''
+        $.each(selectsProjeto.status, function (k, v) {
+          let selected = ''
+          if (v === projeto.status[0].status) {
+            selected = 'selected'
+          }
+          optionStatus += `<option value="${v}" ${selected}>${v}</option>`
+        })
+        selectStatus += optionStatus;
+        selectStatus += `</select>`;
+
+        //cria select do tipo Fertilizante
+        let selectTipo = `<select class="form-select" id="tipo" name="tipo" disabled>`;
+        let optionTipo = ''
+        $.each(selectsProjeto.tipoFertilizante, function (k, v) {
+          let selected = ''
+          if (v === projeto.tipo) {
+            selected = 'selected'
+          }
+          optionTipo += `<option value="${v}" ${selected}>${v}</option>`
+        })
+        selectTipo += optionTipo;
+        selectTipo += `</select>`;
+
+        //cria select do Natureza Física
+        let selectNaturezaFisica = `<select class="form-select" id="natureza_fisica" name="natureza_fisica" disabled>`;
+        let optionNaturezaFisica = ''
+        $.each(selectsProjeto.natureza, function (k, v) {
+          let selected = ''
+          if (v === projeto.natureza_fisica) {
+            selected = 'selected'
+          }
+          optionNaturezaFisica += `<option value="${v}" ${selected}>${v}</option>`
+        })
+        selectNaturezaFisica += optionNaturezaFisica;
+        selectNaturezaFisica += `</select>`;
+
+        //cria checkbox aplicação
+        let checkboxAplicacao = '';
+        let itensSelecionados = projeto.aplicacao
+
+
+
+        $.each(selectsProjeto.modoAplicacao, function (k, v) {
+
+          let isChecked
+
+          if (itensSelecionados !== null) {
+            isChecked = itensSelecionados.includes(v) ? 'checked' : ''
+          }
+
+          checkboxAplicacao += `
+        <div class="form-check form-check-inline">
+            <input class="form-check-input ck_aplicacao" type="checkbox" id="aplicacao_${v}" name="aplicacao[]" value="${v}" ${isChecked} disabled>
+            <label class="form-check-label" for="aplicacao_${v}">${v}</label>
+        </div>`;
+
+        });
+
+
+        let html = `
+                  
+
+                    <div class="row">
+                      <div class="form-group col-md-2">
+                        <label for="nome">Código:</label>
+                        <input type="text" class="form-control" id="codigo" name="codigo" value="${projeto.codigo}" readonly>
+                      </div> 
+                      <div class="form-group col-md-5">
+                        <label for="nome">Nome do Projeto:</label>
+                        <input type="text" class="form-control" id="nome" name="nome" value="${projeto.nome}" readonly>
+                      </div>
+                      <div class="form-group col-md-5">
+                        <label for="cliente">Cliente:</label>
+                        <input type="text" class="form-control" id="cliente" name="cliente" value="${projeto.cliente}" readonly>
+                      </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                      <div class="form-group col-md-4">
+                        <label for="data_inicio" class="form-label">Data de Início</label>
+                        <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="${formatarDataInput(projeto.data_inicio)}">
+                      </div>
+                      <div class="form-group col-md-4">
+                        <label for="data_termino" class="form-label">Data de Término</label>
+                        <input type="date" class="form-control" id="data_termino" name="data_termino" value="${formatarDataInput(projeto.data_termino)}">
+                      </div>
+                      <div class="form-group col-md-4">
+                        <label for="status" class="form-label">Status</label>
+                        ${selectStatus}
+                      </div>
+                      
+                    </div>
+                    <hr>
+
+                    <div class="row">
+                    <div class="form-group col-md-1">
+                      <label for="densidade">Densidade:</label>
+                      <input type="text" class="form-control" id="densidade" name="densidade" value="${projeto.densidade}" readonly>
+                    </div>
+                    <div class="form-group col-md-2">
+                      <label for="ph">PH:</label>
+                      <input type="text" class="form-control" id="ph" name="ph" value="${projeto.ph}" readonly>
+                    </div>
+                    <div class="form-group col-md-2">
+                      <label for="tipo">Tipo:</label>
+                      ${selectTipo}
+                    </div>
+                     <div class="form-group col-md-2">
+                      <label for="natureza_fisica">Natureza Física:</label>
+                     ${selectNaturezaFisica}
+                    </div>
+
+                    <div class="form-group col-md-5">
+                      <label for="aplicacao">Aplicação:</label><br>
+                      ${checkboxAplicacao}
+                    </div>
+                  </div>
+                  <hr>
+                  <div class="row">
+                    <div class="form-group">
+                      <label for="descricao">Descrição:</label>
+                      <textarea type="text" class="form-control" id="descricao" name="descricao" readonly>${projeto.descricao}</textarea>
+                    </div>
+                  </div>
+                    <input type="hidden" id="id" name="id" value="${projeto.id}">
+               
+        `;
+
+        $('#detalhesProjeto').html(html);
+        $('#detalhesModal').modal('show');
+      }
+
+      // Adicionar evento de clique para o botão "Editar"
+      $('#detalhesModal').on('click', '#btnEditar', function () {
+        $('.form-control').prop('readonly', false);
+        $('.form-select').prop('disabled', false);
+        $('.ck_aplicacao').prop('disabled', false);
+        $('#btnEditar').addClass('d-none');
+        $('#btnSalvar').removeClass('d-none');
+      });
+
+      // Adicionar evento de submit para o formulário de edição do projeto
+      $('#formEditarProjeto').on('submit', function (event) {
+
+        event.preventDefault(); // Impedir o envio padrão do formulário
+        const jsonData = serializadoParaJSON($(this).serialize());
+
+        // adiciona aplicacao como array no json
+        let aplicacaoValores = $('input[name="aplicacao[]"]:checked').map(function () {
+          return $(this).val();
+        }).get();
+
+        let formObject = {};
+        $.each(jsonData, function (k, v) {
+          if (k === 'aplicacao[]') {
+            formObject['aplicacao'] = aplicacaoValores;
+          } else if (k === 'densidade') {
+            formObject['densidade'] = v.replace(/,/g, '.');
+          } else {
+            formObject[k] = v;
+          }
+        });
+
+        // Se o campo "aplicacao[]" não foi serializado (checkboxes não marcados), adiciona manualmente
+        // if (!('aplicacao[]' in formObject)) {
+        //   formObject['aplicacao'] = null;
+        // }
+
+        req_UPDATE(opt.urlProjeto + "/" + jsonData.id, formObject)
+          .then(result => {
+
+            // Exibir resposta da API no console
+            if (result.success) {
+              $('#detalhesModal .modal-body').html(`${jsonData.nome} atualizado com sucesso!`);
+              $('#detalhesModal #btnSalvar').addClass("d-none");
+              alterado = 1
+            } else {
+              showErrors(7, result.status)
+            }
+          });
+      });
+
+      //Limpa modal ao fechar
+      $('#detalhesModal').on('hidden.bs.modal', function () {
+        $('#detalhesProjeto').empty(); // Limpar o conteúdo do projeto com id 'detalhesProjeto'
+        $('#btnSalvar').addClass('d-none'); // Ocultar o botão "Salvar"
+        $('#btnEditar').removeClass('d-none'); // Exibir o botão "Editar"
+      });
+
+
+      // Adicionar evento de clique para o botão "Clonar"
+      $('#tabela-projetos').on('click', '.btn-clonar', function () {
+        const id = $(this).data('id');
+        const nome = $(this).data('nome');
+        // Exibe o modal de confirmação de exclusão com o nome do item
+        $('#nomeClone').text(nome);
+        $('#clonarProjeto').modal('show');
+
+        $('#clonarProjeto').on('click', ".confirmarClone", function () {
+          clonarProjeto(id)
+        });
+
+      });
+
+      // Adicionar evento de clique para o botão "Excluir"
+      $('#tabela-projetos').on('click', '.btn-excluir', function () {
+        const id = $(this).data('id');
+        const nome = $(this).data('nome');
+        // Faça algo com o ID, como confirmar a exclusão do projeto
+        excluiProjeto(id, nome);
+      });
+
+    }).catch(error => {
+      // Tratamento de erro de rede ou erro inesperado
+      showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+    });//FIM GETAPI
+
+    // FUNCOES AUXILIARES
+
+    function clonarProjeto(id) {
+
+      let urlClonar = opt.urlProjeto + "/" + id;
+      req_INSERT(urlClonar).then((result) => {
+
+        if (!result.success) {
+          // Tratamento de erro
+          let errorMessage;
+          errorMessage = `${result.message || 'Erro desconhecido.'}`;
+          // Usa a função showErrorModal para mostrar o erro
+          showErrorModal(errorMessage);
+          return;
+        }
+        // fecha modal
+        $("#clonarProjeto").modal('hide')
+        alterado = 1;
+        location.reload()
+
+      }).catch(error => {
+        // Tratamento de erro de rede ou erro inesperado
+        showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+      });
+
+    }
+
+    function excluiProjeto(id, nome) {
+      // Exibe o modal de confirmação de exclusão com o nome do item
+      $('#nomeExclui').text(nome);
+      $('#confirmacaoExclusaoModal').modal('show');
+
+      // Evento ao clicar no botão "Confirmar Exclusão" no modal de confirmação
+      $('#confirmarExclusao').on('click', function () {
+        let urlExclusao = opt.urlProjeto + "/" + id;
+        req_DELETE(urlExclusao).then((result) => {
+
+          if (!result.success) {
+            // Tratamento de erro
+            let errorMessage;
+            errorMessage = `${result.message || 'Erro desconhecido.'}`;
+            // Usa a função showErrorModal para mostrar o erro
+            showErrorModal(errorMessage);
+            return;
+          }
+
+          // Fecha o modal de confirmação de exclusão
+          $('#confirmacaoExclusaoModal').modal('hide');
+
+          location.reload()
+
+
+
+        }).catch(error => {
+          // Tratamento de erro de rede ou erro inesperado
+          showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+        });
+      });
+    }
+
+
+    $(".modal").on("click", ".btn-fecha-modal", function () {
+      $('.modal').modal('hide');
+    })
+
+    $('.modal').on('hidden.bs.modal', function (e) {
+      if (alterado !== 0) {
+        req_GET(opt.urlProjeto).then((result) => {
+
+          if (!result.success) {
+            // Tratamento de erro
+            let errorMessage;
+            errorMessage = `${result.message || 'Erro desconhecido.'}`;
+            // Usa a função showErrorModal para mostrar o erro
+            showErrorModal(errorMessage);
+            return;
+          }
+
+          data = result.data; // Atualiza os dados com a resposta da requisição
+          table.clear().rows.add(data).draw(); // Limpa a tabela, adiciona os novos dados e redesenha
+          $('#detalhesProjeto').empty(); // Limpar o conteúdo do projeto com id 'detalhesProjeto'
+
+        }).catch(error => {
+          // Tratamento de erro de rede ou erro inesperado
+          showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+        });
+
+      }
+    })
+
+  })
+</script>

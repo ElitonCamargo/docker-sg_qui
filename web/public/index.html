@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="PT-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SG_QUI</title>
+
+    <link rel="stylesheet" href="/assets/vendor/bootstrap-5.3.3-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/vendor/DataTables/datatables.min.css">
+    <link rel="stylesheet" href="/assets/vendor/fontawesome-free-6.5.2-web/css/all.min.css">
+    <link rel="stylesheet" href="/assets/vendor/jquery-ui-1.14.0/jquery-ui.min.css" />
+    <link rel="stylesheet" href="/assets/css/main.css">
+
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+
+    <button id="theme-toggle"><i class="fas fa-lightbulb"></i></button>
+
+    <header id="nav"></header>
+
+
+    <!-- ********************* -->
+    <section class="container flex-grow-1" id="root"></section>
+    <!-- ********************** -->
+
+    <footer class="footer py-3 border-top mt-auto" id="footer"></footer>
+
+    <script src="/assets/vendor/jquery-3.7.1.min.js"></script>
+    <script src="/assets/vendor/popper.min.js"></script>
+    <script src='/assets/vendor/bootstrap-5.3.3-dist/js/bootstrap.bundle.min.js'></script>
+    <script src='/assets/vendor/fontawesome-free-6.5.2-web/js/all.min.js'></script>
+    <script src="/assets/vendor/DataTables/datatables.min.js"></script>
+    <script src="/assets/js/dataTableCustom.js"></script>
+    <script src="/assets/vendor/jquery-ui-1.14.0/jquery-ui.min.js"></script>
+    <script src='/assets/js/config.js'></script>
+    <script src='/assets/js/recursos.js'></script>
+    <script src='/assets/js/roteamento.js'></script>
+    <script src='/assets/js/tema.js'></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", start);
+    </script>
+
+    <!-- Div para a máscara que cobre toda a tela -->
+    <div id="preload"
+        class="d-none position-fixed top-0 start-0 w-100 h-100 bg-dark opacity-75 d-flex align-items-center justify-content-center">
+        <!-- Div centralizada com mensagem de "Aguarde" -->
+        <div class="text-light text-center">
+            <h3>Aguarde...</h3>
+            <!-- Pode adicionar outros elementos de estilo ou mensagem aqui -->
+        </div>
+    </div>
+
+    <!-- Modal Erro -->
+    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="errorModalLabel"><i class="fas fa-exclamation-triangle" style="color: red;"></i> Erro</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalErrorMessage">
+                    <!-- Mensagem de erro vai aqui -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

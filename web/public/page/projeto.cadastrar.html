@@ -1,0 +1,205 @@
+<h2>Cadastrar Projeto</h2>
+
+<form class="container mt-5" id="formProjeto">
+
+  <div class="row">
+    <div class="col-md-2">
+      <div class="mb-3">
+        <label for="codigo" class="form-label">Código</label>
+        <input type="text" class="form-control" id="codigo" name="codigo" required>
+      </div>
+    </div>
+    <div class="col-md-5">
+      <div class="mb-3">
+        <label for="nome" class="form-label">Nome do Projeto</label>
+        <input type="text" class="form-control" id="nome" name="nome" required>
+      </div>
+    </div>
+    <div class="col-md-5">
+      <div class="mb-3">
+        <label for="cliente" class="form-label">Cliente</label>
+        <input type="text" class="form-control" id="cliente" name="cliente" required>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4">
+      <div class="mb-3">
+        <label for="data_inicio" class="form-label">Data de Início</label>
+        <input type="date" class="form-control" id="data_inicio" name="data_inicio">
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="mb-3">
+        <label for="data_termino" class="form-label">Previsão de Término</label>
+        <input type="date" class="form-control" id="data_termino" name="data_termino">
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="mb-3">
+        <label for="status" class="form-label">Status</label>
+        <select class="form-select" id="status" name="status"></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-1">
+      <div class="mb-3">
+        <label for="densidade" class="form-label">Densidade</label>
+        <input class="form-control" type="number" id="densidade" name="densidade" step="0.01">
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="mb-3">
+        <label for="ph" class="form-label">PH</label>
+        <input class="form-control" id="ph" name="ph">
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="mb-3">
+        <label for="tipo" class="form-label">Tipo de fertilizante</label>
+        <select class="form-select" id="tipo" name="tipo">
+          <option>Selecione</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="col-md-2">
+      <div class="mb-3">
+        <label for="natureza_fisica" class="form-label">Natureza Física</label>
+        <select class="form-select" id="natureza_fisica" name="natureza_fisica">
+          <option>Selecione</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="col-md-5">
+      <div class="mb-3">
+        <label class="form-label">Aplicação</label>
+        <div id="aplicacaoDiv"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="mb-3">
+      <label for="descricao" class="form-label">Descrição</label>
+      <textarea class="form-control" id="descricao" name="descricao" rows="2"></textarea>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" type="submit">Cadastrar</button>
+</form>
+
+
+<!-- Modal de Confirmação de Cadastro -->
+<div class="modal fade" id="confirmacaoCadastroModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirma Cadastro</h5>
+        <button type="button" class="btn-close btn-fecha-modal" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-fecha-modal" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+
+  $(function () {
+    $('#formProjeto').on('submit', function (event) {
+      event.preventDefault();
+      const jsonData = serializadoParaJSON($(this).serialize());
+
+      // adiciona aplicacao como array no json
+      var aplicacaoValores = $('input[name="aplicacao[]"]:checked').map(function () {
+        return $(this).val();
+      }).get();
+
+
+      let formObject = {};
+      $.each(jsonData, function (k, v) {
+        if (k === 'aplicacao[]') {
+          formObject['aplicacao'] = aplicacaoValores;
+        } else if (k === 'densidade') {
+          formObject['densidade'] = v.replace(/,/g, '.');
+        } else {
+          formObject[k] = v;
+        }
+      });
+
+      req_INSERT(opt.urlProjeto, formObject).then(result => {
+
+        // Exibir resposta da API no console
+        if (!result.success) {
+          // Tratamento de erro
+          let errorMessage;
+          errorMessage = `${result.message || 'Erro desconhecido.'}`;
+          // Usa a função showErrorModal para mostrar o erro
+          showErrorModal(errorMessage);
+          return;
+        }
+
+        $('#confirmacaoCadastroModal .modal-body').html(`<b>${result.data[0].nome}</b> cadastrado com sucesso!`);
+        $('#confirmacaoCadastroModal').modal('show');
+        $(this)[0].reset();
+
+      }).catch(error => {
+        // Tratamento de erro de rede ou erro inesperado
+        showErrorModal(`Erro de comunicação: ${error.message || 'Erro desconhecido.'}`);
+      });
+
+    });
+
+
+    //adiciona options no select do config.js
+    optionStatus = ''
+    $.each(selectsProjeto.status, function (k, v) {
+      optionStatus += `<option value="${v}">${v}</option>`
+    })
+    $('#status').append(optionStatus);
+
+    optionStatus = ''
+    $.each(selectsProjeto.natureza, function (k, v) {
+      optionStatus += `<option value="${v}">${v}</option>`
+    })
+    $('#natureza_fisica').append(optionStatus);
+
+    optionStatus = ''
+    $.each(selectsProjeto.tipoFertilizante, function (k, v) {
+      optionStatus += `<option value="${v}">${v}</option>`
+    })
+    $('#tipo').append(optionStatus);
+
+
+
+
+    let checkboxGroup = '';
+    $.each(selectsProjeto.modoAplicacao, function (k, v) {
+      checkboxGroup += `<div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="aplicacao_${v}" name="aplicacao[]" value="${v}">
+      <label class="form-check-label" for="aplicacao_${v}">${v} </label></div>`;
+    });
+    $('#aplicacaoDiv').html(checkboxGroup);
+
+
+
+
+
+
+    // substitui virgula por ponto no cadastro de densidade
+    $('#formProjeto').on('focusout', "#densidade", function () {
+      // Substitui vírgulas por pontos ao sair do foco .Não mostra na tela mas é mudado
+      let value = $(this).val().replace(/,/g, '.');
+      $(this).val(value);
+    });
+
+
+  })
+</script>

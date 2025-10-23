@@ -1,0 +1,186 @@
+<style>
+    .alert-success {
+        color: green;
+        /* Cor do texto de sucesso */
+        font-weight: bold;
+        /* Negrito, se desejado */
+    }
+</style>
+<h2>Configurações do sistema</h2>
+<hr>
+
+<h3>Página de impressão</h3>
+
+<form id="formConfig" class="form-group">
+    <label class="label" for="print-procedimento">Procedimento: </label>
+    <textarea class="form-control itemEdit" type="text" id="print-procedimento" name="print-procedimento"></textarea>
+
+    <label class="label" for="print-produzido-por">Produzido Por: </label>
+    <input class="form-control itemEdit" type="text" id="print-produzido-por" name="print-produzido-por">
+
+    <label class="label" for="print-resultado-final">Resultado Final:</label>
+    <input class="form-control itemEdit" type="text" id="print-resultado-final" name="print-resultado-final">
+
+    <label class="label" for="print-responsavel-area">Responsável Área:</label>
+    <input class="form-control itemEdit" type="text" id="print-responsavel-area" name="print-responsavel-area">
+
+    <label class="label" for="print-anexo">Anexo:</label>
+    <input class="form-control itemEdit" type="text" id="print-anexo" name="print-anexo">
+
+    <label class="label" for="print-analises">Análises: (adicione intens separados por vírgula)</label>
+    <input class="form-control itemEdit" type="text" id="print-analises" name="print-analises">
+
+</form>
+<hr>
+<div class="row">
+    <label for="print-logo">Logotipo</label>
+    <div class="col-md-1">
+
+        <img id="preview" style="width: 80px; height: 80px;">
+    </div>
+    <div class="col-md-3">
+        <input class="form-control" type="file" id="print-logo" name="print-logo" accept="image/*">
+        <button class="btn btn-outline-secondary float-end" onclick="processImage()">
+            Salvar Logotipo
+        </button>
+    </div>
+</div>
+
+<script>
+
+    // alimenta os dados do form
+    (async () => {
+
+        const consultaTodos = await getConfig();
+
+        const form = $("#formConfig").serializeArray();
+
+        $.each(form, (k, v) => {
+
+            $(`#${v.name}`).val(getValueByKey(v.name));
+            $(`#${v.name}`).attr('data-id', getIdKey(v.name));
+
+        });
+
+
+        function getValueByKey(chave) {
+            var dadosJson = consultaTodos;
+            var resultado = dadosJson.find(function (item) {
+                return item.key === chave;
+            });
+
+            if (resultado) {
+                return resultado.value;  // Retorna o valor encontrado
+            } else {
+                return null;  // Retorna null caso a chave não seja encontrada
+            }
+        }
+
+        function getIdKey(chave) {
+            var dadosJson = consultaTodos;
+            var resultado = dadosJson.find(function (item) {
+                return item.key === chave;
+            });
+
+            if (resultado) {
+                return resultado.id;  // Retorna o valor encontrado
+            } else {
+                return null;  // Retorna null caso a chave não seja encontrada
+            }
+        }
+
+    })();
+
+
+    //altera ao sair de foco
+    $(".itemEdit").on("focusout", async function () {
+        let id = $(this).attr("data-id");
+        let key = $(this).attr("id");
+        let value = $(this).val();
+
+        try {
+
+            let r = await setConfig(id, key, value); // Aguarda o retorno correto
+
+            if (r.id) {
+                // Seleciona a label associada
+                let label = $("label[for='" + key + "']");
+                // Remove a parte "salvo" se existir
+                label.html(label.html().replace(/<span class="alert-success">salvo!<\/span>/, ''));
+                // Adiciona "salvo" com a classe "alert-success"
+                label.append(' <span class="alert-success">salvo!</span>');
+            }
+        } catch (error) {
+            console.error("Erro ao chamar setConfig:", error);
+        }
+
+    });
+
+
+    //altera logo
+
+
+    async function loadImage() {
+
+        $('#preview').attr('src', " ").hide();
+
+        try {
+            // Supondo que getConfig seja uma função assíncrona que retorna uma Promise
+            const base64Image = await getConfig('print-logo');  // Espera o valor resolvido da Promise
+
+            if (base64Image) {
+                $('#preview').attr('src', base64Image.value).show();  // Atribui o valor correto ao src
+            } else {
+                alert('Imagem não encontrada no banco.');
+            }
+        } catch (error) {
+            console.error("Erro ao carregar a imagem:", error);
+        }
+    }
+
+
+
+    async function processImage() {
+        let file = $('#print-logo')[0].files[0];
+        const base64ImageBd = await getConfig('print-logo');
+        let id = base64ImageBd.id;
+
+        if (!file) {
+            alert('Por favor, selecione uma imagem.');
+            return;
+        }
+
+        let reader = new FileReader();
+
+        reader.onload = function (e) {
+            let img = new Image();
+            img.src = e.target.result;
+
+            img.onload = function () {
+                // Verifica e redimensiona a imagem para 80x80px, se necessário
+                let canvas = document.createElement('canvas');
+                canvas.width = 80;
+                canvas.height = 80;
+                let ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, 80, 80);
+
+                // Converte o conteúdo do canvas para Base64
+                let base64String = canvas.toDataURL(file.type);
+
+                // Salva no banco de dados usando setConfig
+                setConfig(id, 'print-logo', base64String);
+
+                loadImage();
+
+            };
+        };
+
+        reader.readAsDataURL(file);
+
+    }
+
+
+    $(document).ready(function () {
+        loadImage(); // Chama a função para carregar a imagem do banco de dados
+    });
+</script>
