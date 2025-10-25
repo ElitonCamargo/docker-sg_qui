@@ -7,6 +7,9 @@ DB_PASS=root
 # Caminho para os arquivos SQL
 BACKUP=./mysql/backup.sql
 SCHEMA=./mysql/schema.sql
+VIEWS=./mysql/views.sql
+PROCEDURES=./mysql/procedures.sql
+FUNCTIONS=./mysql/functions.sql
 SEED=./mysql/seed.sql
 
 # Up backup antigo
@@ -18,7 +21,10 @@ reset-schema:
 
 # Apaga e recria o schema e popula com dados iniciais
 reset-db:
-	docker exec -i $(CONTAINER_NAME) mysql -u $(DB_USER) -p$(DB_PASS) < $(SCHEMA)
+	docker exec -i $(CONTAINER_NAME) mysql -u $(DB_USER) -p$(DB_PASS) $(DB_NAME) < $(SCHEMA)
+	docker exec -i $(CONTAINER_NAME) mysql -u $(DB_USER) -p$(DB_PASS) $(DB_NAME) < $(VIEWS)
+	docker exec -i $(CONTAINER_NAME) mysql -u $(DB_USER) -p$(DB_PASS) $(DB_NAME) < $(PROCEDURES)
+	docker exec -i $(CONTAINER_NAME) mysql -u $(DB_USER) -p$(DB_PASS) $(DB_NAME) < $(FUNCTIONS)
 	docker exec -i $(CONTAINER_NAME) mysql -u $(DB_USER) -p$(DB_PASS) $(DB_NAME) < $(SEED)
 
 # Executa apenas o seed (dados iniciais)

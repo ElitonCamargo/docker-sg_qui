@@ -18,13 +18,8 @@ services:
       - DB_CONNLIMIT=10             # O número máximo de conexões simultâneas permitidas no pool.
       - DB_QUEUELIMIT=50            # O número máximo de consultas que podem ficar na fila de espera quando todas as conexões estão ocupadas.
       - DB_CONNTIMEOUT=5000         # Tempo máximo para estabelecer a conexão
-
-      # Configurações Redis
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
     depends_on:
       - db
-      - redis
     command: sh -c "npm install && npm run dev"
 
   web:
@@ -56,17 +51,6 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
-  redis:
-    image: redis:alpine
-    container_name: sgqui_redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
-
 volumes:
   db_data:
     name: sgqui_db_data
-  redis_data:
-    name: sgqui_redis_data
