@@ -1,6 +1,6 @@
 // controller/usuarioController.js
 import * as UsuarioModel from "../models/UsuarioModel.js";
-import * as Sessoes from '../models/SessoesModel.js';
+import * as Sessao from '../models/SessaoModel.js';
 import * as responses from '../utils/responses.js';
 
 /**
@@ -26,12 +26,12 @@ import * as responses from '../utils/responses.js';
  */
 export const cadastrar = async (req, res) => {
   try {
-    const { nome, email, senha, cargo } = req.body;
+    const { nome, email, senha, permissao, status } = req.body;
 
-    if (!nome || !email || !senha || !cargo) {
+    if (!nome || !email || !senha || !Number.isFinite(Number(permissao)) || !Number.isFinite(Number(status))) {
       return responses.error(res, { statusCode: 400, message: "Todos os campos são obrigatórios" });
     }
-
+    
     const newUsuario = await UsuarioModel.cadastrar(req.body);
     delete newUsuario.senha;
 
@@ -74,9 +74,10 @@ export const login = async (req, res) => {
     }
     //Efetuou login com sucesso
     const horas_validade = 36;
-    const sessao = await Sessoes.criar(usuario.id, horas_validade);
+    const sessao = await Sessao.criar(usuario.id, horas_validade);
     
     const data = {
+      token: `${sessao.id}.${sessao.usuario}.${sessao.token}`,
       token: usuario.id + "." + sessao.token,
       expiracao: sessao.validade,
       usuario
@@ -101,10 +102,14 @@ export const login = async (req, res) => {
  * @param {import('express').Response} res - Objeto de resposta do Express.
  * @returns {Promise<void>} Retorna resposta HTTP com a lista de usuários (200) ou mensagem de não encontrado (404).
  */
-export const listar = async (req, res) => {
+export const consultar = async (req, res) => {
   try {
-    const search = req.query.search || "";
-    const usuarios = await UsuarioModel.listar(search);
+    let search = "";
+    const email = req.query.email;
+    const nome = req.query.nome;
+    if (email) search = email;
+    if (nome) search = nome;
+    const usuarios = await UsuarioModel.consultar(search);
 
     if (!usuarios || usuarios.length === 0) {
       return responses.notFound(res, { message: "Nenhum usuário encontrado" });
@@ -123,12 +128,12 @@ export const listar = async (req, res) => {
  * - Caso encontrado, retorna os dados do usuário.
  *
  * @async
- * @function buscarPorId
+ * @function consultarPorId
  * @param {import('express').Request} req - Objeto da requisição com parâmetro `id` na URL.
  * @param {import('express').Response} res - Objeto de resposta do Express.
  * @returns {Promise<void>} Retorna resposta HTTP com os dados do usuário (200) ou erro (400/404/500).
  */
-export const buscarPorId = async (req, res) => {
+export const consultarPorId = async (req, res) => {
   try {
     const id = req.params.id;
 
@@ -159,18 +164,20 @@ export const buscarPorId = async (req, res) => {
  * - Caso exista, retorna os dados do usuário autenticado.
  *
  * @async
- * @function buscarUsuarioLogado
+ * @function consultarLogado
  * @param {import('express').Request} req - Objeto da requisição com `loginId` definido.
  * @param {import('express').Response} res - Objeto de resposta do Express.
  * @returns {Promise<void>} Retorna resposta HTTP com os dados do usuário autenticado (200) ou erro (404/500).
  */
-export const buscarUsuarioLogado = async (req, res) => {
+export const consultarLogado = async (req, res) => {
   try {
     if (!req.loginId) {
       return responses.notFound(res, { message: "ID de sessão não encontrado" });
     }
 
-    const usuario = await UsuarioModel.buscarPorId(req.loginId);
+    const usuario_id = req.loginId.split('.')[1];
+
+    const usuario = await UsuarioModel.consultarPorId(usuario_id);
 
     if (!usuario) {
       return responses.notFound(res, { message: "Usuário não encontrado" });
@@ -196,7 +203,7 @@ export const buscarUsuarioLogado = async (req, res) => {
  */
 export const buscarPorEmail = async (req, res) => {
   try {
-    const usuario = await UsuarioModel.buscarPorEmail(req.params.email);
+    const usuario = await UsuarioModel.consultarPorEmail(req.params.email);
     if (!usuario) {
       return responses.notFound(res, { message: "Usuário não encontrado" });
     }
@@ -209,60 +216,18 @@ export const buscarPorEmail = async (req, res) => {
 };
 
 /**
- * Atualiza todos os campos obrigatórios de um usuário.
- *
- * - Exige que `nome`, `email`, `senha` e `cargo` estejam presentes no corpo da requisição.
- * - Valida se o `id` informado é válido.
- *
- * @async
- * @function atualizarTudo
- * @param {import('express').Request} req - Objeto da requisição com parâmetro `id` na URL e os dados do usuário no corpo.
- * @param {import('express').Response} res - Objeto de resposta do Express.
- * @returns {Promise<void>} Retorna resposta HTTP com os dados do usuário atualizado (200) ou erro (400/404/500).
- */
-export const atualizarTudo = async (req, res) => {
-  try {
-    const id = req.params.id;
-    const usuario = req.body;
-
-    if (!id) {
-      return responses.error(res, { statusCode: 400, message: "ID do usuário é obrigatório" });
-    }
-
-    if (!Number(id)) {
-      return responses.error(res, { statusCode: 400, message: "ID do usuário deve ser um número válido" });
-    }
-
-    const { nome, email, senha, cargo } = usuario;
-    if (!nome || !email || !senha || !cargo) {
-      return responses.error(res, { statusCode: 400, message: "Todos os campos (nome, email, senha, cargo) são obrigatórios" });
-    }
-
-    const resultado = await UsuarioModel.atualizar(id, usuario);
-    if (!resultado) {
-      return responses.notFound(res, { message: "Usuário não encontrado" });
-    }
-
-    return responses.success(res, { message: "Usuário atualizado com sucesso", data: resultado });
-
-  } catch (error) {
-    return responses.error(res, { message: error.message });
-  }
-};
-
-/**
- * Atualiza parcialmente os dados de um usuário.
+ * Atualiza parcialmente ou totalmente os dados de um usuário.
  *
  * - Permite atualizar apenas os campos enviados no corpo da requisição.
  * - Valida se o `id` informado é válido.
  *
  * @async
- * @function atualizar
+ * @function alterar
  * @param {import('express').Request} req - Objeto da requisição com parâmetro `id` na URL e os dados do usuário no corpo.
  * @param {import('express').Response} res - Objeto de resposta do Express.
  * @returns {Promise<void>} Retorna resposta HTTP com os dados do usuário atualizado (200) ou erro (400/404/500).
  */
-export const atualizar = async (req, res) => {
+export const alterar = async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -272,7 +237,12 @@ export const atualizar = async (req, res) => {
       return responses.error(res, { statusCode: 400, message: "ID do usuário deve ser um número válido" });
     }
 
-    const resultado = await UsuarioModel.atualizar(id, req.body);
+    const usuario = req.body;
+    if (Object.keys(usuario).length === 0) {
+      return responses.error(res, { statusCode: 400, message: "Nenhum dado para atualizar" });
+    }
+
+    const resultado = await UsuarioModel.alterar(id, usuario);
 
     if (!resultado) {
       return responses.notFound(res, { message: "Usuário não encontrado" });

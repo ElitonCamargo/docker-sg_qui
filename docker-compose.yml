@@ -9,11 +9,15 @@ services:
       - "3000:3000"
     environment:
       # Configurações do banco de dados MySQL
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_USER=sgqui_user
-      - DB_NAME=sgqui_db
-      - DB_PASSWORD=sgqui_password
+      - DB_HOST=db                  # Host do banco de dados MySQL
+      - DB_PORT=3306                # Porta padrão do MySQL
+      - DB_USER=sgqui_user          # Usuário do banco de dados MySQL
+      - DB_NAME=sgqui_db            # Nome do banco de dados
+      - DB_PASSWORD=sgqui_password  # Senha do banco de dados
+      - DB_WAITFORCONN=true         # Se deve ou não esperar por uma conexão disponível quando o limite de conexões for atingido.         
+      - DB_CONNLIMIT=10             # O número máximo de conexões simultâneas permitidas no pool.
+      - DB_QUEUELIMIT=50            # O número máximo de consultas que podem ficar na fila de espera quando todas as conexões estão ocupadas.
+      - DB_CONNTIMEOUT=5000         # Tempo máximo para estabelecer a conexão
 
       # Configurações Redis
       - REDIS_HOST=redis

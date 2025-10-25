@@ -1,5 +1,5 @@
-import pool from '../database/data.js';
 import bcrypt from 'bcryptjs';
+import pool from '../database/data.js';
 
 export const consultar = async (filtro = '') => {
     let cx;

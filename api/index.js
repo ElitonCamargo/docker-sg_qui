@@ -46,6 +46,8 @@ app.get('/',(req,res)=>{
     });
 });
 
+
+
 // Rotas de autenticação
 app.use('/', autenticacao);
 

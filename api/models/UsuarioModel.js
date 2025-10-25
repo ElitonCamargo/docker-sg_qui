@@ -10,56 +10,49 @@ import pool from "../database/data.js";
  * @param {string} usuario.nome - Nome do usuário
  * @param {string} usuario.email - E-mail do usuário
  * @param {string} usuario.senha - Senha em texto puro (será criptografada)
- * @param {string} usuario.cargo - Cargo/função do usuário
+ * @param {number} usuario.permissao - Permissão/tinyint do usuário
  * @param {string} usuario.avatar - Avatar/função do usuário
+ * @param {number} usuario.status - Status/tinyint do usuário
  * @returns {Promise<Object>} Retorna o usuário recém-cadastrado
  * @throws {Error} Caso o e-mail já exista ou ocorra erro no insert
  */
-export const cadastrar = async (usuario, cx = null) => {   // Função para cadastrar um usuário no banco de dados (Create)
-    let localCx = cx; // controle para saber se a conexão foi criada aqui ou recebida de fora
+export const cadastrar = async (usuario, cx = null) => {
+    let localCx = cx; 
     try {
 
         if (!localCx) {
-            // Obtém uma conexão do pool se não foi passada uma conexão
             localCx = await pool.getConnection();
         }
-        // Desestrutura os dados recebidos do objeto usuário
-        const { nome, email, senha, cargo, avatar } = usuario;
-        // Query SQL para inserir um novo usuário
-        const query = "INSERT INTO Usuarios (nome, email, senha, cargo, avatar) VALUES (?, ?, ?, ?, ?)";
 
-        // Criptografa a senha antes de salvar no banco
+            console.log(usuario);
+
+        const {nome,email,senha,permissao,avatar,status} = usuario;
+        const query = "INSERT INTO usuario (nome, email, senha, permissao, avatar, status) VALUES (?, ?, ?, ?, ?, ?)";
+
         const hashSenha = await bcrypt.hash(senha, 10);
 
-        // Monta o array de valores para substituir os placeholders da query
-        const values = [nome, email, hashSenha, cargo, avatar];
+        const values = [nome,email,hashSenha,permissao,avatar,status];
 
-        // Verifica se já existe um usuário com o mesmo e-mail
-        const usuarioExistente = await buscarPorEmail(email, localCx);
+        const usuarioExistente = await consultarPorEmail(email, localCx);
         if (usuarioExistente) {
             throw new Error("Email já cadastrado");
         }
 
-        // Executa a query de inserção com os valores
         const [result] = await localCx.execute(query, values);
 
-        // Verifica se alguma linha foi afetada (se o insert funcionou)
         if (result.affectedRows === 0) {
             throw new Error("Erro ao cadastrar usuário");
         } 
 
-        // Pega o ID do último usuário inserido
         const lastIdUser = result.insertId;
-        // Retorna o usuário cadastrado, buscando por ID
-        const usuarioCadastrado = await buscarPorId(lastIdUser, localCx);       
+
+        const usuarioCadastrado = await consultarPorId(lastIdUser, localCx);       
         return usuarioCadastrado;
 
     } catch (error) {
-        // Lança erro em caso de falha
         throw new Error("Erro ao cadastrar usuário: " + error.message);
     } finally{
-        // Garante que a conexão será liberada de volta ao pool
-        if (!cx && localCx) { // só libera se a conexão foi criada aqui
+        if (!cx && localCx) { 
             localCx.release();
         }
     }
@@ -81,7 +74,7 @@ export const login = async (email, senha) => { // Função para efetuar o login 
     try {
 
         // Busca o usuário pelo e-mail
-        const usuario = await buscarPorEmail(email, cx);
+        const usuario = await consultarPorEmail(email, cx);
         if (!usuario) {
             return null; // Retorna null se o usuário não for encontrado
         }        
@@ -113,14 +106,14 @@ export const login = async (email, senha) => { // Função para efetuar o login 
  * @returns {Promise<Array>} Array de usuários
  * @throws {Error} Caso ocorra erro na consulta
  */
-export const listar = async (search = "", cx = null) => { // Função para listar todos os usuários (Read)
+export const consultar = async (search = "", cx = null) => { // Função para listar todos os usuários (Read)
     let localCx = cx; // controle para saber se a conexão foi criada aqui ou recebida de fora
     try {
         if (!localCx) {
             // Obtém uma conexão do pool se não foi passada uma conexão
             localCx = await pool.getConnection();
         }
-        let query = "SELECT id,nome,email,cargo,avatar,createdAt,updatedAt FROM Usuarios";
+        let query = "SELECT id,nome,email,permissao,avatar,status,createdAt,updatedAt FROM usuario";
         
         let values = [];
 
@@ -152,7 +145,7 @@ export const listar = async (search = "", cx = null) => { // Função para lista
  * @returns {Promise<Object|null>} Retorna o usuário encontrado ou null se não existir
  * @throws {Error} Caso ocorra erro na consulta
  */
-export const buscarPorId = async (id, cx = null) => { // Função para buscar um usuário pelo ID (Read)
+export const consultarPorId = async (id, cx = null) => { // Função para buscar um usuário pelo ID (Read)
     let localCx = cx; // controle para saber se a conexão foi criada aqui ou recebida de fora
     try {
         if (!localCx) {
@@ -160,7 +153,7 @@ export const buscarPorId = async (id, cx = null) => { // Função para buscar um
             localCx = await pool.getConnection();
         }
         // Query SQL para buscar um usuário pelo ID
-        const query = "SELECT * FROM Usuarios WHERE id = ?";
+        const query = "SELECT * FROM usuario WHERE id = ?";
         // Executa a query passando o ID como parâmetro
         const [rows] = await localCx.execute(query, [id]);
         // Retorna apenas o primeiro resultado (usuário encontrado)
@@ -184,7 +177,7 @@ export const buscarPorId = async (id, cx = null) => { // Função para buscar um
  * @returns {Promise<Object|null>} Retorna o usuário encontrado ou null se não existir
  * @throws {Error} Caso ocorra erro na consulta
  */
-export const buscarPorEmail = async (email, cx = null) => { // Função para buscar um usuário pelo e-mail (Read)
+export const consultarPorEmail = async (email, cx = null) => { // Função para buscar um usuário pelo e-mail (Read)
     let localCx = cx; // controle para saber se a conexão foi criada aqui ou recebida de fora
     try {
         if (!localCx) {
@@ -192,7 +185,7 @@ export const buscarPorEmail = async (email, cx = null) => { // Função para bus
             localCx = await pool.getConnection();
         }
         // Query SQL para buscar usuário pelo e-mail
-        const query = "SELECT * FROM Usuarios WHERE email = ?";
+        const query = "SELECT * FROM usuario WHERE email = ?";
         // Executa a query passando o e-mail como parâmetro
         const [rows] = await localCx.execute(query, [email]);
         // Retorna apenas o primeiro resultado
@@ -209,64 +202,9 @@ export const buscarPorEmail = async (email, cx = null) => { // Função para bus
     }
 };
 
-/**
- * Atualiza os dados de um usuário existente.
- *
- * @param {number} id - ID do usuário a ser atualizado
- * @param {Object} usuario - Objeto contendo os novos dados
- * @param {string} usuario.nome - Nome do usuário
- * @param {string} usuario.email - E-mail do usuário
- * @param {string} usuario.senha - Senha em texto puro (não está criptografada aqui)
- * @param {string} usuario.cargo - Cargo/função do usuário
- * @param {string} usuario.avatar - Avatar/função do usuário
- * @returns {Promise<void>}
- * @throws {Error} Caso ocorra erro na atualização
- */
-export const atualizarTudo = async (id, usuario, cx = null) => {  // U
-    let localCx = cx; // Declara a variável de conexão
-
-    try {
-        // Obtém uma conexão do pool
-        if (!localCx) {
-            // Obtém uma conexão do pool se não foi passada uma conexão
-            localCx = await pool.getConnection();
-        }
-
-        // Query SQL para atualizar um usuário por ID
-        const { nome, email, senha, cargo, avatar } = usuario;
-
-        // Criptografa a senha antes de salvar no banco
-        const hashSenha = await bcrypt.hash(senha, 10);
-        
-        const query = "UPDATE Usuarios SET nome = ?, email = ?, senha = ?, cargo = ?, avatar = ? WHERE id = ?";
-        const values = [nome, email, hashSenha, cargo, avatar, id];
-
-        // Executa a query e captura o resultado
-        const [result] = await localCx.execute(query, values);
-
-        // Verifica se alguma linha foi afetada (se o update funcionou)
-        if (result.affectedRows === 0) {
-            throw new Error("Erro ao atualizar usuário");
-        }
-
-        // Retorna o usuário atualizado, buscando por ID
-        const usuarioAtualizado = await buscarPorId(id, localCx);
-        delete usuarioAtualizado.senha; // Remove a senha do objeto antes de retornar
-        return usuarioAtualizado;
-
-    } catch (error) {
-        // Lança um erro para ser capturado pelo controller
-        throw new Error("Erro ao atualizar usuário: " + error.message);
-    } finally {
-        // Garante que a conexão será liberada, se ela existir
-        if (!cx && localCx) { // só libera se a conexão foi criada aqui
-            localCx.release();
-        }
-    }
-};
 
 /**
- * Atualiza os dados de um usuário existente.
+ * Alterar os dados de um usuário existente.
  *
  * @param {number} id - ID do usuário a ser atualizado
  * @param {Object} usuario - Objeto contendo os novos dados
@@ -278,7 +216,7 @@ export const atualizarTudo = async (id, usuario, cx = null) => {  // U
  * @returns {Promise<void>}
  * @throws {Error} Caso ocorra erro na atualização
  */
-export const atualizar = async (id, usuario, cx = null) => {  // U
+export const alterar = async (id, usuario, cx = null) => {  // U
     let localCx = cx; // Declara a variável de conexão
 
     try {
@@ -316,7 +254,7 @@ export const atualizar = async (id, usuario, cx = null) => {  // U
         values.push(id);
 
         // Monta a query SQL dinamicamente
-        const query = `UPDATE Usuarios SET ${atributos.join(", ")} WHERE id = ?`;
+        const query = `UPDATE usuario SET ${atributos.join(", ")} WHERE id = ?`;
        
         // Executa a query e captura o resultado
         const [result] = await localCx.execute(query, values);
@@ -327,8 +265,7 @@ export const atualizar = async (id, usuario, cx = null) => {  // U
         }
 
         // Retorna o usuário atualizado, buscando por ID
-        const usuarioAtualizado = await buscarPorId(id, localCx);
-        delete usuarioAtualizado.senha; // Remove a senha do objeto antes de retornar
+        const usuarioAtualizado = await consultarPorId(id, localCx);
         return usuarioAtualizado;
 
     } catch (error) {
@@ -360,7 +297,7 @@ export const deletar = async (id, cx = null) => {
         }
 
         // Query SQL para deletar um usuário por ID
-        const query = "DELETE FROM Usuarios WHERE id = ?";
+        const query = "DELETE FROM usuario WHERE id = ?";
 
         // Executa a query e captura o resultado
         const [result] = await localCx.execute(query, [id]);
