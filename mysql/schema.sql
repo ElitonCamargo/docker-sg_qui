@@ -115,7 +115,7 @@ CREATE TABLE projeto (
 CREATE TABLE sessao (
   id bigint UNSIGNED NOT NULL,
   usuario int UNSIGNED NOT NULL,
-  token varchar(255) DEFAULT NULL,
+  `token` varchar(255) DEFAULT NULL,
   validade datetime DEFAULT NULL,
   createdAt timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -123,7 +123,7 @@ CREATE TABLE sessao (
 
 
 
-CREATE TABLE token (
+CREATE TABLE `token` (
   usuario int UNSIGNED NOT NULL,
   chave_token varchar(255) DEFAULT NULL,
   validade datetime DEFAULT NULL
@@ -162,13 +162,14 @@ ALTER TABLE etapa
 ALTER TABLE etapa_mp
   ADD PRIMARY KEY (id),
   ADD KEY mp (mp),
-  ADD KEY etapa_2 (etapa);
+  ADD KEY etapa (etapa);
 
 
 ALTER TABLE garantia
   ADD PRIMARY KEY (id),
-  ADD UNIQUE KEY nutriente (nutriente,materia_prima),
-  ADD KEY materia_prima (materia_prima);
+  ADD UNIQUE KEY nutriente_mp (nutriente,materia_prima),
+  ADD KEY materia_prima (materia_prima),
+  ADD KEY nutriente (nutriente);
 
 
 ALTER TABLE materia_prima
