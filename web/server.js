@@ -38,10 +38,7 @@ app.get('*', (req, res) => {
 
 
 // Iniciar o servidor
-const PORT = process.env.PORT || 8080; // Use a porta definida no .env ou 8080 por padrão
-if (!process.env.PORT) {
-    console.warn('Aviso: A variável de ambiente PORT não está definida. Usando a porta 8080 por padrão.');
-}
+const PORT = 8080; // Use a porta definida no .env ou 8080 por padrão
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
 });

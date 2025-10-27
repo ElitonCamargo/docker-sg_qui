@@ -31,6 +31,14 @@ reset-db:
 seed:
 	docker exec -i $(CONTAINER_NAME) mysql -u $(DB_USER) -p$(DB_PASS) $(DB_NAME) < $(SEED)
 
+# Construir a imagem e iniciar os containers do Docker
+docker-build:
+	docker compose up --build -d
+
+# Construir as imagens de produção
+docker-build-prod:
+	docker compose -f docker-compose.prod.yml up --build -d
+
 # Inicia os containers do Docker
 docker-up:
 	docker compose up -d
@@ -43,9 +51,17 @@ docker-down:
 docker-restart: 
 	down up
 
+# Lista os containers em execução
+docker-ps:
+	docker compose ps
+
 # Verifica os logs dos containers
 docker-logs:
 	docker compose logs -f --tail=100
+
+# Verifica os logs de produção
+docker-logs-prod:
+	docker compose -f docker-compose.prod.yml logs -f --tail=100
 
 # Makefile help
 help:
@@ -57,4 +73,8 @@ help:
 	@echo "  docker-up       - Inicia os containers do Docker"
 	@echo "  docker-down     - Para os containers do Docker"
 	@echo "  docker-restart  - Reinicia os containers do Docker"
+	@echo "  docker-ps       - Lista os containers em execução"
 	@echo "  docker-logs     - Verifica os logs dos containers"
+	@echo "  docker-build    - Constrói a imagem e inicia os containers do Docker"
+	@echo "  docker-build-prod - Constrói as imagens de produção"
+	@echo "  docker-logs-prod - Verifica os logs de produção"
